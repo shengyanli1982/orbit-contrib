@@ -12,10 +12,14 @@ import (
 )
 
 var (
-	testIpAddress   = "192.168.0.11"
+	testIpAddress   = "192.168.0.1"
+	testIpAddress2  = "192.168.0.2"
+	testIpAddress3  = "192.168.0.3"
 	testPort        = 13143
 	testUrlPath     = "/test"
 	testEndpoint    = fmt.Sprintf("%s:%d", testIpAddress, testPort)
+	testEndpoint2   = fmt.Sprintf("%s:%d", testIpAddress2, testPort)
+	testEndpoint3   = fmt.Sprintf("%s:%d", testIpAddress3, testPort)
 	defaultEndpoint = fmt.Sprintf("%s:%d", DefaultLocalIpAddress, testPort)
 )
 
@@ -179,26 +183,26 @@ func TestLimiter_Whitelist(t *testing.T) {
 	}
 }
 
-// func TestLimiter_CustomWhitelist(t *testing.T) {
-// 	// Create a new rate limiter
-// 	conf := NewConfig().WithWhitelist([]string{testIpAddress2})
-// 	limiter := NewRateLimiter(conf)
+func TestLimiter_CustomWhitelist(t *testing.T) {
+	// Create a new rate limiter
+	conf := NewConfig().WithWhitelist([]string{testIpAddress3})
+	limiter := NewRateLimiter(conf)
 
-// 	// Create a test context
-// 	router := gin.New()
-// 	router.Use(limiter.HandlerFunc())
-// 	router.GET(testUrlPath, func(c *gin.Context) {
-// 		c.String(http.StatusOK, "OK")
-// 	})
+	// Create a test context
+	router := gin.New()
+	router.Use(limiter.HandlerFunc())
+	router.GET(testUrlPath, func(c *gin.Context) {
+		c.String(http.StatusOK, "OK")
+	})
 
-// 	// Test the rate limiter
-// 	// Send multiple requests to test the rate limiter
-// 	wg := sync.WaitGroup{}
-// 	for i := 0; i < 10; i++ {
-// 		// Add a new goroutine to the wait group
-// 		wg.Add(1)
-// 		go testWhitelistRequestFunc(t, i, router, &wg, testEndpoint2, testUrlPath)
-// 		// Wait for all goroutines to finish
-// 		wg.Wait()
-// 	}
-// }
+	// Test the rate limiter
+	// Send multiple requests to test the rate limiter
+	wg := sync.WaitGroup{}
+	for i := 0; i < 10; i++ {
+		// Add a new goroutine to the wait group
+		wg.Add(1)
+		go testWhitelistRequestFunc(t, i, router, &wg, testEndpoint3, testUrlPath)
+		// Wait for all goroutines to finish
+		wg.Wait()
+	}
+}

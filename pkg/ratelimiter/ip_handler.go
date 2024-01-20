@@ -2,6 +2,7 @@ package ratelimiter
 
 import (
 	"net/http"
+	"sync"
 
 	"github.com/gin-gonic/gin"
 	itl "github.com/shengyanli1982/orbit-contrib/pkg/ratelimiter/internal"
@@ -11,12 +12,14 @@ import (
 type IpRateLimiter struct {
 	cache  *itl.Cache
 	config *Config
+	once   sync.Once
 }
 
 func NewIpRateLimiter(config *Config) *IpRateLimiter {
 	return &IpRateLimiter{
 		cache:  itl.NewCache(),
 		config: isConfigValid(config),
+		once:   sync.Once{},
 	}
 }
 
@@ -56,10 +59,12 @@ func (rl *IpRateLimiter) HandlerFunc() gin.HandlerFunc {
 		if rl.config.match(context.Request) {
 			clientIP := context.ClientIP()
 			if _, ok := rl.config.whitelist[clientIP]; !ok {
-				limiter, _ := rl.cache.GetOrCreate(clientIP, func() interface{} {
-					return NewRateLimiter(rl.config)
+				limiter, _ := rl.cache.GetOrCreate(clientIP, func() any {
+					element := itl.ElementPool.Get()
+					element.(*itl.Element).SetValue(NewRateLimiter(rl.config))
+					return element
 				})
-				if !limiter.(*RateLimiter).GetLimiter().Allow() {
+				if !limiter.(*itl.Element).GetValue().(*RateLimiter).GetLimiter().Allow() {
 					context.Abort()
 					context.String(http.StatusTooManyRequests, "[429] too many http requests, ip:"+clientIP+", method: "+context.Request.Method+", path: "+context.Request.URL.Path)
 					rl.config.callback.OnLimited(context.Request)
@@ -69,4 +74,10 @@ func (rl *IpRateLimiter) HandlerFunc() gin.HandlerFunc {
 		}
 		context.Next()
 	}
+}
+
+func (rl *IpRateLimiter) Stop() {
+	rl.once.Do(func() {
+		rl.cache.Stop()
+	})
 }
