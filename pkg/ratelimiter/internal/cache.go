@@ -7,8 +7,8 @@ import (
 )
 
 const (
-	SegmentSize = 1 << 8
-	segmentMask = SegmentSize - 1
+	SegmentSize     = 1 << 8
+	segmentAndOpVal = SegmentSize - 1
 )
 
 type Segment struct {
@@ -70,19 +70,19 @@ func NewCache() *Cache {
 }
 
 func (c *Cache) Get(key string) (interface{}, bool) {
-	return c.segments[xxhash.Sum64String(key)&segmentMask].Get(key)
+	return c.segments[xxhash.Sum64String(key)&segmentAndOpVal].Get(key)
 }
 
 func (c *Cache) GetOrCreate(key string, fn func() interface{}) (interface{}, bool) {
-	return c.segments[xxhash.Sum64String(key)&segmentMask].GetOrCreate(key, fn)
+	return c.segments[xxhash.Sum64String(key)&segmentAndOpVal].GetOrCreate(key, fn)
 }
 
 func (c *Cache) Set(key string, value interface{}) {
-	c.segments[xxhash.Sum64String(key)&segmentMask].Set(key, value)
+	c.segments[xxhash.Sum64String(key)&segmentAndOpVal].Set(key, value)
 }
 
 func (c *Cache) Delete(key string) {
-	c.segments[xxhash.Sum64String(key)&segmentMask].Delete(key)
+	c.segments[xxhash.Sum64String(key)&segmentAndOpVal].Delete(key)
 }
 
 func (c *Cache) Segments() []*Segment {

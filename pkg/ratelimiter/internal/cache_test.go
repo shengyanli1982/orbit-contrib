@@ -120,7 +120,7 @@ func TestCache_Get(t *testing.T) {
 	value := "testValue"
 
 	// Set the value in the cache
-	cache.segments[xxhash.Sum64String(key)&segmentMask].Set(key, value)
+	cache.segments[xxhash.Sum64String(key)&segmentAndOpVal].Set(key, value)
 
 	// Call the Get function
 	result, ok := cache.Get(key)
@@ -130,7 +130,7 @@ func TestCache_Get(t *testing.T) {
 	assert.Equal(t, value, result)
 
 	// Delete the value from the cache
-	cache.segments[xxhash.Sum64String(key)&segmentMask].Delete(key)
+	cache.segments[xxhash.Sum64String(key)&segmentAndOpVal].Delete(key)
 
 	// Call the Get function
 	result, ok = cache.Get(key)
