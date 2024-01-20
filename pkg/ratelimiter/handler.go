@@ -39,7 +39,7 @@ func (rl *RateLimiter) HandlerFunc() gin.HandlerFunc {
 	return func(context *gin.Context) {
 		if rl.config.match(context.Request) {
 			clientIP := context.ClientIP()
-			if _, ok := rl.config.whitelist[clientIP]; !(ok || rl.limiter.Allow()) {
+			if _, ok := rl.config.whitelist[clientIP]; !ok && !rl.limiter.Allow() {
 				context.Abort()
 				context.String(http.StatusTooManyRequests, "[429] too many http requests, method: "+context.Request.Method+", path: "+context.Request.URL.Path)
 				rl.config.callback.OnLimited(context.Request)

@@ -3,6 +3,7 @@ module github.com/shengyanli1982/orbit-contrib/pkg/ratelimiter
 go 1.19
 
 require (
+	github.com/cespare/xxhash/v2 v2.2.0
 	github.com/gin-gonic/gin v1.8.2
 	github.com/stretchr/testify v1.8.4
 	golang.org/x/time v0.5.0
