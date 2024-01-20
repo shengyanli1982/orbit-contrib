@@ -2,7 +2,6 @@ package ratelimiter
 
 import (
 	"net/http"
-	"sync"
 	"testing"
 
 	"github.com/gin-gonic/gin"
@@ -84,26 +83,18 @@ func TestIpRateLimiter_RateAndBurst(t *testing.T) {
 		c.String(http.StatusOK, "OK")
 	})
 
-	// Test the rate limiter - 1
+	// Test the rate limiter
 	// Send multiple requests to test the rate limiter
-	wg := sync.WaitGroup{}
 	for i := 0; i < 10; i++ {
-		// Add a new goroutine to the wait group
-		wg.Add(1)
-		go testRequestFunc(t, i, router, conf, &wg, testEndpoint, testUrlPath)
-		// Wait for all goroutines to finish
-		wg.Wait()
+		// Start a new test the rate limiter
+		testRequestFunc(t, i, router, conf, testEndpoint, testUrlPath)
 	}
 
-	// Test the rate limiter - 2
+	// Test the rate limiter
 	// Send multiple requests to test the rate limiter
-	wg = sync.WaitGroup{}
 	for i := 0; i < 10; i++ {
-		// Add a new goroutine to the wait group
-		wg.Add(1)
-		go testRequestFunc(t, i, router, conf, &wg, testEndpoint2, testUrlPath)
-		// Wait for all goroutines to finish
-		wg.Wait()
+		// Start a new test the rate limiter
+		testRequestFunc(t, i, router, conf, testEndpoint2, testUrlPath)
 	}
 }
 
@@ -122,13 +113,9 @@ func TestIpRateLimiter_Callback(t *testing.T) {
 
 	// Test the rate limiter
 	// Send multiple requests to test the rate limiter
-	wg := sync.WaitGroup{}
 	for i := 0; i < 10; i++ {
-		// Add a new goroutine to the wait group
-		wg.Add(1)
-		go testRequestFunc(t, i, router, conf, &wg, testEndpoint, testUrlPath)
-		// Wait for all goroutines to finish
-		wg.Wait()
+		// Start a new test the rate limiter
+		testRequestFunc(t, i, router, conf, testEndpoint, testUrlPath)
 	}
 }
 
@@ -154,23 +141,16 @@ func TestIpRateLimiter_MatchFunc(t *testing.T) {
 
 	// Test the rate limiter
 	// Send multiple requests to test the rate limiter
-	wg := sync.WaitGroup{}
 	for i := 0; i < 10; i++ {
-		// Add a new goroutine to the wait group
-		wg.Add(1)
-		go testRequestFunc(t, i, router, conf, &wg, testEndpoint, testUrlPath)
-		// Wait for all goroutines to finish
-		wg.Wait()
+		// Start a new test the rate limiter
+		testRequestFunc(t, i, router, conf, testEndpoint, testUrlPath)
 	}
 
-	// Test the rate limiter// Send multiple requests to test the rate limiter
-	wg = sync.WaitGroup{}
+	// Test the rate limiter
+	// Send multiple requests to test the rate limiter
 	for i := 0; i < 10; i++ {
-		// Add a new goroutine to the wait group
-		wg.Add(1)
-		go testWhitelistRequestFunc(t, i, router, &wg, testEndpoint, path)
-		// Wait for all goroutines to finish
-		wg.Wait()
+		// Start a new test the rate limiter
+		testWhitelistRequestFunc(t, i, router, testEndpoint, path)
 	}
 }
 
@@ -189,13 +169,9 @@ func TestIpRateLimiter_Whitelist(t *testing.T) {
 
 	// Test the rate limiter
 	// Send multiple requests to test the rate limiter
-	wg := sync.WaitGroup{}
 	for i := 0; i < 10; i++ {
-		// Add a new goroutine to the wait group
-		wg.Add(1)
-		go testWhitelistRequestFunc(t, i, router, &wg, defaultEndpoint, testUrlPath)
-		// Wait for all goroutines to finish
-		wg.Wait()
+		// Start a new test the rate limiter
+		testWhitelistRequestFunc(t, i, router, defaultEndpoint, testUrlPath)
 	}
 }
 
@@ -214,12 +190,8 @@ func TestIpRateLimiter_CustomWhitelist(t *testing.T) {
 
 	// Test the rate limiter
 	// Send multiple requests to test the rate limiter
-	wg := sync.WaitGroup{}
 	for i := 0; i < 10; i++ {
-		// Add a new goroutine to the wait group
-		wg.Add(1)
-		go testWhitelistRequestFunc(t, i, router, &wg, testEndpoint, testUrlPath)
-		// Wait for all goroutines to finish
-		wg.Wait()
+		// Start a new test the rate limiter
+		testWhitelistRequestFunc(t, i, router, testEndpoint, testUrlPath)
 	}
 }
