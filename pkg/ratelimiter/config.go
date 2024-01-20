@@ -8,7 +8,7 @@ var (
 	DefaultLocalIpAddress     = "127.0.0.1"
 	DefaultLocalIpv6Address   = "::1"
 	DefaultLimitRatePerSecond = float64(1)
-	DefaultLimitBurst         = 5
+	DefaultLimitBurst         = 1
 	DefaultLimitMatchFunc     = func(header *http.Request) bool { return true }
 	DefaultIpWhitelist        = map[string]struct{}{
 		DefaultLocalIpAddress:   empty,

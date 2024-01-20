@@ -1,193 +1,199 @@
 package ratelimiter
 
 import (
-	"context"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
+	"sync"
 	"testing"
-	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"
 )
 
 var (
-	testIpAddress = "192.168.0.1"
+	testIpAddress   = "192.168.0.11"
+	testPort        = 13143
+	testUrlPath     = "/test"
+	testEndpoint    = fmt.Sprintf("%s:%d", testIpAddress, testPort)
+	defaultEndpoint = fmt.Sprintf("%s:%d", DefaultLocalIpAddress, testPort)
 )
 
-func TestNewRateLimiterHandlerFunc_Request(t *testing.T) {
-	// Create a test config
-	config := NewConfig().WithRate(1)
-
-	// Test when the request matches the config
-	config.match = func(req *http.Request) bool {
-		assert.Equal(t, req.URL.Path, "/test")
-		assert.Equal(t, req.Method, "GET")
-		return true
-	}
-
-	// Create a new rate limiter handler function
-	handler := NewRateLimiterHandlerFunc(config)
-
-	// Create a new Gin router
-	router := gin.New()
-
-	// Use the BodyBuffer middleware
-	router.Use(handler)
-
-	// Define a test route
-	router.GET("/test", func(c *gin.Context) {
-		c.String(http.StatusOK, "Test")
-	})
-
-	//Define a stress function
-	stressFunc := func(addr string) {
-		// Create a test request
-		req, _ := http.NewRequest(http.MethodGet, "/test", nil)
-		req.RemoteAddr = addr + ":1234"
-
-		// Create a Test recorder
-		rec := httptest.NewRecorder()
-
-		// Perform the request
-		router.ServeHTTP(rec, req)
-	}
-
-	// Define a test function
-	testFunc := func(addr string, code int) {
-		// Create a test request
-		req, _ := http.NewRequest(http.MethodGet, "/test", nil)
-		req.RemoteAddr = addr + ":1234"
-
-		// Create a Test recorder
-		rec := httptest.NewRecorder()
-
-		// Perform the request
-		router.ServeHTTP(rec, req)
-
-		// Assert the response
-		// If the response code is not 200, it means the request is limited
-		assert.Equal(t, code, rec.Code)
-	}
-
-	t.Run("LowSpeedRequest", func(t *testing.T) {
-		// Test the handler ( should return 200 ), low speed
-		testFunc(testIpAddress, http.StatusOK)
-	})
-
-	// continue to run stressFunc
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
-	go func() {
-		for {
-			select {
-			case <-ctx.Done():
-				return
-			default:
-				stressFunc(testIpAddress)
-			}
-		}
-	}()
-
-	t.Run("WhitelistRequest", func(t *testing.T) {
-		// Test the handler ( should return 200 ), default whitelist
-		for i := 0; i < 10; i++ {
-			go testFunc(DefaultLocalIpAddress, http.StatusOK)
-		}
-	})
-
-	t.Run("HighSpeedRequest", func(t *testing.T) {
-		// Test the handler ( should return 429 ), high speed
-		for i := 0; i < 10; i++ {
-			go testFunc(testIpAddress, http.StatusTooManyRequests)
-		}
-	})
-
-	// Wait for the goroutine to finish
-	time.Sleep(time.Second)
+type testCallback struct {
+	t *testing.T
 }
 
-func TestNewRateLimiterHandlerFunc_MatchFunc(t *testing.T) {
-	// Create a test config
-	config := NewConfig().WithRate(1).WithMatchFunc(func(req *http.Request) bool {
-		return req.URL.Path == "/test"
-	})
+func (c *testCallback) OnLimited(header *http.Request) {
+	assert.Equal(c.t, testEndpoint, header.RemoteAddr)
+}
 
-	// Create a new rate limiter handler function
-	handler := NewRateLimiterHandlerFunc(config)
+func testRequestFunc(t *testing.T, idx int, router *gin.Engine, conf *Config, wg *sync.WaitGroup, ep, url string) {
+	// Defer the wait group to ensure that the goroutine is finished
+	defer wg.Done()
 
-	// Create a new Gin router
+	// Create a test request
+	req := httptest.NewRequest(http.MethodGet, url, nil)
+	req.RemoteAddr = ep
+	resp := httptest.NewRecorder()
+	router.ServeHTTP(resp, req)
+
+	// Assert that the response status code is 200 OK for the first "conf.burst" requests
+	if idx < conf.burst {
+		assert.Equal(t, http.StatusOK, resp.Code)
+	} else {
+		// Assert that the response status code is 429 Too Many Requests for the remaining requests
+		assert.Equal(t, http.StatusTooManyRequests, resp.Code)
+	}
+
+	// Print the request information
+	fmt.Println("[Request]", idx, ep, resp.Code, url)
+}
+
+func testWhitelistRequestFunc(t *testing.T, idx int, router *gin.Engine, wg *sync.WaitGroup, ep, url string) {
+	// Defer the wait group to ensure that the goroutine is finished
+	defer wg.Done()
+
+	// Create a test request
+	req := httptest.NewRequest(http.MethodGet, url, nil)
+	req.RemoteAddr = ep
+	resp := httptest.NewRecorder()
+	router.ServeHTTP(resp, req)
+
+	// Assert that the response status code is 200 OK for the first "conf.burst" requests
+	assert.Equal(t, http.StatusOK, resp.Code)
+
+	// Print the request information
+	fmt.Println("[Request]", idx, ep, resp.Code, url)
+}
+
+func TestLimiterHandlerFunc_RateAndBurst(t *testing.T) {
+	// Create a new rate limiter
+	conf := NewConfig().WithRate(2).WithBurst(5)
+	limiter := NewRateLimiter(conf)
+
+	// Create a test context
 	router := gin.New()
-
-	// Use the BodyBuffer middleware
-	router.Use(handler)
-
-	// Define a test route
-	router.GET("/test", func(c *gin.Context) {
-		c.String(http.StatusOK, "Test")
-	})
-	router.GET("/test2", func(c *gin.Context) {
-		c.String(http.StatusOK, "Test2")
+	router.Use(limiter.HandlerFunc())
+	router.GET(testUrlPath, func(c *gin.Context) {
+		c.String(http.StatusOK, "OK")
 	})
 
-	//Define a stress function
-	stressFunc := func(addr string) {
-		// Create a test request
-		req, _ := http.NewRequest(http.MethodGet, "/test", nil)
-		req.RemoteAddr = addr + ":1234"
+	// Test the rate limiter// Send multiple requests to test the rate limiter
+	wg := sync.WaitGroup{}
+	for i := 0; i < 10; i++ {
+		// Add a new goroutine to the wait group
+		wg.Add(1)
+		go testRequestFunc(t, i, router, conf, &wg, testEndpoint, testUrlPath)
+		// Wait for all goroutines to finish
+		wg.Wait()
+	}
+}
 
-		// Create a Test recorder
-		rec := httptest.NewRecorder()
+func TestLimiterHandlerFunc_Callback(t *testing.T) {
+	// Create a new rate limiter
+	conf := NewConfig().WithRate(2).WithBurst(5)
+	limiter := NewRateLimiter(conf)
 
-		// Perform the request
-		router.ServeHTTP(rec, req)
+	// Create a test context
+	router := gin.New()
+	router.Use(limiter.HandlerFunc())
+	router.GET(testUrlPath, func(c *gin.Context) {
+		c.String(http.StatusOK, "OK")
+	})
+
+	// Test the rate limiter// Send multiple requests to test the rate limiter
+	wg := sync.WaitGroup{}
+	for i := 0; i < 10; i++ {
+		// Add a new goroutine to the wait group
+		wg.Add(1)
+		go testRequestFunc(t, i, router, conf, &wg, testEndpoint, testUrlPath)
+		// Wait for all goroutines to finish
+		wg.Wait()
+	}
+}
+
+func TestLimiterHandlerFunc_MatchFunc(t *testing.T) {
+	path := testUrlPath + "2"
+
+	// Create a new rate limiter
+	conf := NewConfig().WithMatchFunc(func(header *http.Request) bool {
+		return header.URL.Path == testUrlPath
+	})
+	limiter := NewRateLimiter(conf)
+
+	// Create a test context
+	router := gin.New()
+	router.Use(limiter.HandlerFunc())
+	router.GET(testUrlPath, func(c *gin.Context) {
+		c.String(http.StatusOK, "OK")
+	})
+	router.GET(path, func(c *gin.Context) {
+		c.String(http.StatusOK, "OK")
+	})
+
+	// Test the rate limiter// Send multiple requests to test the rate limiter
+	wg := sync.WaitGroup{}
+	for i := 0; i < 10; i++ {
+		// Add a new goroutine to the wait group
+		wg.Add(1)
+		go testRequestFunc(t, i, router, conf, &wg, testEndpoint, testUrlPath)
+		// Wait for all goroutines to finish
+		wg.Wait()
 	}
 
-	// Define a test function
-	testFunc := func(addr string, code int, path string) {
-		// Create a test request
-		req, _ := http.NewRequest(http.MethodGet, path, nil)
-		req.RemoteAddr = addr + ":1234"
-
-		// Create a Test recorder
-		rec := httptest.NewRecorder()
-
-		// Perform the request
-		router.ServeHTTP(rec, req)
-
-		// Assert the response
-		// If the response code is not 200, it means the request is limited
-		assert.Equal(t, code, rec.Code)
+	// Test the rate limiter// Send multiple requests to test the rate limiter
+	wg = sync.WaitGroup{}
+	for i := 0; i < 10; i++ {
+		// Add a new goroutine to the wait group
+		wg.Add(1)
+		go testWhitelistRequestFunc(t, i, router, &wg, testEndpoint, path)
+		// Wait for all goroutines to finish
+		wg.Wait()
 	}
+}
 
-	// continue to run stressFunc
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
-	go func() {
-		for {
-			select {
-			case <-ctx.Done():
-				return
-			default:
-				stressFunc(testIpAddress)
-			}
-		}
-	}()
+func TestLimiterHandlerFunc_Whitelist(t *testing.T) {
+	// Create a new rate limiter
+	conf := NewConfig()
+	limiter := NewRateLimiter(conf)
 
-	t.Run("MatchPath", func(t *testing.T) {
-		// Test the handler ( should return 200 )
-		for i := 0; i < 10; i++ {
-			go testFunc(testIpAddress, http.StatusTooManyRequests, "/test")
-		}
+	// Create a test context
+	router := gin.New()
+	router.Use(limiter.HandlerFunc())
+	router.GET(testUrlPath, func(c *gin.Context) {
+		c.String(http.StatusOK, "OK")
 	})
 
-	t.Run("DontMatch", func(t *testing.T) {
-		// Test the handler ( should return 429 ), high speed
-		for i := 0; i < 10; i++ {
-			go testFunc(testIpAddress, http.StatusOK, "/test2")
-		}
+	// Test the rate limiter// Send multiple requests to test the rate limiter
+	wg := sync.WaitGroup{}
+	for i := 0; i < 10; i++ {
+		// Add a new goroutine to the wait group
+		wg.Add(1)
+		go testWhitelistRequestFunc(t, i, router, &wg, defaultEndpoint, testUrlPath)
+		// Wait for all goroutines to finish
+		wg.Wait()
+	}
+}
+
+func TestLimiterHandlerFunc_CustomWhitelist(t *testing.T) {
+	// Create a new rate limiter
+	conf := NewConfig().WithWhitelist([]string{testIpAddress})
+	limiter := NewRateLimiter(conf)
+
+	// Create a test context
+	router := gin.New()
+	router.Use(limiter.HandlerFunc())
+	router.GET(testUrlPath, func(c *gin.Context) {
+		c.String(http.StatusOK, "OK")
 	})
 
-	// Wait for the goroutine to finish
-	time.Sleep(time.Second)
+	// Test the rate limiter// Send multiple requests to test the rate limiter
+	wg := sync.WaitGroup{}
+	for i := 0; i < 10; i++ {
+		// Add a new goroutine to the wait group
+		wg.Add(1)
+		go testWhitelistRequestFunc(t, i, router, &wg, testEndpoint, testUrlPath)
+		// Wait for all goroutines to finish
+		wg.Wait()
+	}
 }

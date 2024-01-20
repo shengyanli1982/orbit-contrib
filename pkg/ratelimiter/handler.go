@@ -1,22 +1,51 @@
 package ratelimiter
 
 import (
+	"net/http"
+
 	"github.com/gin-gonic/gin"
+	"golang.org/x/time/rate"
+	gr "golang.org/x/time/rate"
 )
 
-func NewRateLimiterHandlerFunc(config *Config) gin.HandlerFunc {
-	config = isConfigValid(config)
-	limiter := NewLimiter(config)
+type RateLimiter struct {
+	config  *Config
+	limiter *rate.Limiter
+}
 
-	return func(c *gin.Context) {
-		if config.match(c.Request) {
-			clientIp := c.ClientIP()
-			if _, ok := config.whitelist[clientIp]; !ok && !limiter.Allow() {
-				c.AbortWithStatus(429)
-				config.callback.OnLimited(c.Request)
+func NewRateLimiter(config *Config) *RateLimiter {
+	config = isConfigValid(config)
+	return &RateLimiter{
+		config:  config,
+		limiter: rate.NewLimiter(rate.Limit(config.rate), config.burst),
+	}
+}
+
+func (rl *RateLimiter) GetLimiter() *rate.Limiter {
+	return rl.limiter
+}
+
+func (rl *RateLimiter) SetRate(rate float64) {
+	rl.config.rate = rate
+	rl.limiter.SetLimit(gr.Limit(rl.config.rate))
+}
+
+func (rl *RateLimiter) SetBurst(burst int) {
+	rl.config.burst = burst
+	rl.limiter.SetBurst(rl.config.burst)
+}
+
+func (rl *RateLimiter) HandlerFunc() gin.HandlerFunc {
+	return func(context *gin.Context) {
+		if rl.config.match(context.Request) {
+			clientIP := context.ClientIP()
+			if _, ok := rl.config.whitelist[clientIP]; !(ok || rl.limiter.Allow()) {
+				context.Abort()
+				context.String(http.StatusTooManyRequests, "[429] too many http requests, method: "+context.Request.Method+", path: "+context.Request.URL.Path)
+				rl.config.callback.OnLimited(context.Request)
 				return
 			}
 		}
-		c.Next()
+		context.Next()
 	}
 }
