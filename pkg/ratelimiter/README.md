@@ -1,7 +1,5 @@
 # Ratelimiter
 
-## Introduction
-
 **Ratelimiter** is a simple rate limiter for `Gin` and `orbit`. It is based on [token bucket](https://en.wikipedia.org/wiki/Token_bucket) algorithm. It is designed to be used in a protected API endpoint.
 
 `Ratelimiter` has two modes:
