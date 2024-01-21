@@ -55,14 +55,83 @@ go get github.com/shengyanli1982/orbit-contrib/pkg/ratelimiter
 **Example**
 
 ```go
+package main
 
+import (
+	"fmt"
+	"net/http"
+	"net/http/httptest"
+	"time"
+
+	"github.com/gin-gonic/gin"
+	rl "github.com/shengyanli1982/orbit-contrib/pkg/ratelimiter"
+)
+
+var (
+	testUrl = "/test"
+)
+
+func testRequestFunc(idx int, router *gin.Engine, conf *rl.Config, url string) {
+	// Create a test request
+	req := httptest.NewRequest(http.MethodGet, url, nil)
+	resp := httptest.NewRecorder()
+	router.ServeHTTP(resp, req)
+
+	// Print the request information
+	fmt.Println("[Request]", idx, resp.Code, url)
+}
+
+func main() {
+	// Create a new rate limiter
+	conf := rl.NewConfig().WithRate(2).WithBurst(5)
+	limiter := rl.NewRateLimiter(conf)
+	defer limiter.Stop()
+
+	// Create a test context
+	router := gin.New()
+	router.Use(limiter.HandlerFunc())
+	router.GET(testUrl, func(c *gin.Context) {
+		c.String(http.StatusOK, "OK")
+	})
+
+	// Test the rate limiter
+	// Send multiple requests to test the rate limiter
+	for i := 0; i < 10; i++ {
+		// Add a new goroutine to the wait group
+		testRequestFunc(i, router, conf, testUrl)
+	}
+
+	// Wait for to complete
+	time.Sleep(time.Second)
+}
+```
+
+**Result**
+
+```bash
+$ go run demo.go
+[GIN-debug] [WARNING] Running in "debug" mode. Switch to "release" mode in production.
+ - using env:   export GIN_MODE=release
+ - using code:  gin.SetMode(gin.ReleaseMode)
+
+[GIN-debug] GET    /test                     --> main.main.func1 (2 handlers)
+[Request] 0 200 /test
+[Request] 1 200 /test
+[Request] 2 200 /test
+[Request] 3 200 /test
+[Request] 4 200 /test
+[Request] 5 429 /test
+[Request] 6 429 /test
+[Request] 7 429 /test
+[Request] 8 429 /test
+[Request] 9 429 /test
 ```
 
 #### 2. Ip Ratelimiter
 
 **Methods**
 
--   `GetLimiter` : get the limiter.
+-   `GetLimiter` : get the limiter by key.
 -   `SetRate` : set the rate for limiter, thread safe.
 -   `SetBurst` : set the burst for limiter, thread safe.
 -   `HandlerFunc` : return a `gin.HandlerFunc` for `orbit` or `gin`.
@@ -71,5 +140,95 @@ go get github.com/shengyanli1982/orbit-contrib/pkg/ratelimiter
 **Example**
 
 ```go
+package main
 
+import (
+	"fmt"
+	"net/http"
+	"net/http/httptest"
+	"time"
+
+	"github.com/gin-gonic/gin"
+	rl "github.com/shengyanli1982/orbit-contrib/pkg/ratelimiter"
+)
+
+var (
+	testUrl        = "/test"
+	testPort       = 13143
+	testIpAddress  = "192.168.0.11"
+	testEndpoint   = fmt.Sprintf("%s:%d", testIpAddress, testPort)
+	testIpAddress2 = "192.168.0.12"
+	testEndpoint2  = fmt.Sprintf("%s:%d", testIpAddress2, testPort)
+)
+
+func testRequestFunc(idx int, router *gin.Engine, conf *rl.Config, ep, url string) {
+	// Create a test request
+	req := httptest.NewRequest(http.MethodGet, url, nil)
+	req.RemoteAddr = ep
+	resp := httptest.NewRecorder()
+	router.ServeHTTP(resp, req)
+
+	// Print the request information
+	fmt.Println("[Request]", idx, resp.Code, ep, url)
+}
+
+func main() {
+	// Create a new rate limiter
+	conf := rl.NewConfig().WithRate(2).WithBurst(5)
+	limiter := rl.NewIpRateLimiter(conf)
+	defer limiter.Stop()
+
+	// Create a test context
+	router := gin.New()
+	router.Use(limiter.HandlerFunc())
+	router.GET(testUrl, func(c *gin.Context) {
+		c.String(http.StatusOK, "OK")
+	})
+
+	// Test the rate limiter
+	// Send multiple requests to test the rate limiter
+	for i := 0; i < 10; i++ {
+		// Add a new goroutine to the wait group
+		testRequestFunc(i, router, conf, testEndpoint, testUrl)
+	}
+
+	for i := 0; i < 10; i++ {
+		// Add a new goroutine to the wait group
+		testRequestFunc(i, router, conf, testEndpoint2, testUrl)
+	}
+
+	// Wait for to complete
+	time.Sleep(time.Second)
+}
+```
+
+**Result**
+
+```bash
+$ go run demo.go
+[GIN-debug] [WARNING] Running in "debug" mode. Switch to "release" mode in production.
+ - using env:   export GIN_MODE=release
+ - using code:  gin.SetMode(gin.ReleaseMode)
+
+[GIN-debug] GET    /test                     --> main.main.func1 (2 handlers)
+[Request] 0 200 192.168.0.11:13143 /test
+[Request] 1 200 192.168.0.11:13143 /test
+[Request] 2 200 192.168.0.11:13143 /test
+[Request] 3 200 192.168.0.11:13143 /test
+[Request] 4 200 192.168.0.11:13143 /test
+[Request] 5 429 192.168.0.11:13143 /test
+[Request] 6 429 192.168.0.11:13143 /test
+[Request] 7 429 192.168.0.11:13143 /test
+[Request] 8 429 192.168.0.11:13143 /test
+[Request] 9 429 192.168.0.11:13143 /test
+[Request] 0 200 192.168.0.12:13143 /test
+[Request] 1 200 192.168.0.12:13143 /test
+[Request] 2 200 192.168.0.12:13143 /test
+[Request] 3 200 192.168.0.12:13143 /test
+[Request] 4 200 192.168.0.12:13143 /test
+[Request] 5 429 192.168.0.12:13143 /test
+[Request] 6 429 192.168.0.12:13143 /test
+[Request] 7 429 192.168.0.12:13143 /test
+[Request] 8 429 192.168.0.12:13143 /test
+[Request] 9 429 192.168.0.12:13143 /test
 ```
