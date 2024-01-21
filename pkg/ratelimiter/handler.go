@@ -81,3 +81,7 @@ func (rl *RateLimiter) HandlerFunc() gin.HandlerFunc {
 		context.Next()
 	}
 }
+
+// Stop 停止限流器
+// Stop stops the rate limiter
+func (rl *RateLimiter) Stop() {}
