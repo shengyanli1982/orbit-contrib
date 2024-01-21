@@ -2,6 +2,8 @@ module github.com/shengyanli1982/orbit-contrib/pkg/ratelimiter
 
 go 1.19
 
+replace github.com/shengyanli1982/orbit-contrib => ../../
+
 require (
 	github.com/cespare/xxhash/v2 v2.2.0
 	github.com/gin-gonic/gin v1.8.2
