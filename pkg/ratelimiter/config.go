@@ -1,38 +1,24 @@
 package ratelimiter
 
-import "net/http"
+import (
+	com "github.com/shengyanli1982/orbit-contrib/internal/common"
+)
 
 // empty 是一个空结构体，用于实现空的值
 // empty is an empty struct for implementing empty value
 var empty = struct{}{}
 
 var (
-	// 默认本地IP地址
-	// Default local IP address
-	DefaultLocalIpAddress = "127.0.0.1"
-	// 默认本地IPv6地址
-	// Default local IPv6 address
-	DefaultLocalIpv6Address = "::1"
 	// 默认每秒限制速率
 	// Default limit rate per second
 	DefaultLimitRatePerSecond = float64(1)
+
 	// 默认限制突发数
 	// Default limit burst
 	DefaultLimitBurst = 1
-	// 默认匹配函数
-	// Default match function
-	DefaultLimitMatchFunc = func(header *http.Request) bool { return true }
-	// 默认IP白名单
-	// Default IP whitelist
-	DefaultIpWhitelist = map[string]struct{}{
-		DefaultLocalIpAddress:   empty,
-		DefaultLocalIpv6Address: empty,
-	}
 )
 
 // HttpRequestHeaderMatchFunc 是一个匹配函数，用于匹配请求头
-// HttpRequestHeaderMatchFunc is a match function for matching request headers
-type HttpRequestHeaderMatchFunc func(header *http.Request) bool
 
 // Config 是一个配置结构体
 // Config is a struct of config
@@ -48,7 +34,7 @@ type Config struct {
 	ipWhitelist map[string]struct{}
 	// 匹配函数
 	// Match function
-	match HttpRequestHeaderMatchFunc
+	matchFunc com.HttpRequestHeaderMatchFunc
 	// 回调函数
 	// Callback
 	callback Callback
@@ -60,8 +46,8 @@ func NewConfig() *Config {
 	return &Config{
 		rate:        DefaultLimitRatePerSecond,
 		burst:       DefaultLimitBurst,
-		match:       DefaultLimitMatchFunc,
-		ipWhitelist: DefaultIpWhitelist,
+		matchFunc:   com.DefaultLimitMatchFunc,
+		ipWhitelist: com.DefaultIpWhitelist,
 		callback:    &emptyCallback{},
 	}
 }
@@ -95,8 +81,8 @@ func (c *Config) WithBurst(burst int) *Config {
 
 // WithMatchFunc 设置匹配函数
 // WithMatchFunc sets the match function
-func (c *Config) WithMatchFunc(match HttpRequestHeaderMatchFunc) *Config {
-	c.match = match
+func (c *Config) WithMatchFunc(match com.HttpRequestHeaderMatchFunc) *Config {
+	c.matchFunc = match
 	return c
 }
 
@@ -119,11 +105,11 @@ func isConfigValid(config *Config) *Config {
 		if config.burst <= 0 {
 			config.burst = DefaultLimitBurst
 		}
-		if config.match == nil {
-			config.match = DefaultLimitMatchFunc
+		if config.matchFunc == nil {
+			config.matchFunc = com.DefaultLimitMatchFunc
 		}
 		if config.ipWhitelist == nil {
-			config.ipWhitelist = DefaultIpWhitelist
+			config.ipWhitelist = com.DefaultIpWhitelist
 		}
 		if config.callback == nil {
 			config.callback = &emptyCallback{}

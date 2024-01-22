@@ -104,7 +104,7 @@ func (rl *IpRateLimiter) HandlerFunc() gin.HandlerFunc {
 	return func(context *gin.Context) {
 		// 如果请求匹配限流器的配置，则进行限流
 		// If the request matches the configuration of the limiter, then limit it
-		if rl.config.match(context.Request) {
+		if rl.config.matchFunc(context.Request) {
 			// 获取客户端IP
 			// Get the client IP
 			clientIP := context.ClientIP()

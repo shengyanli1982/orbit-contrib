@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/gin-gonic/gin"
+	com "github.com/shengyanli1982/orbit-contrib/internal/common"
 	"github.com/stretchr/testify/assert"
 	"golang.org/x/time/rate"
 )
@@ -16,7 +17,7 @@ func TestIpRateLimiter_GetLimiter(t *testing.T) {
 	defer rl.Stop()
 
 	// Test case 1: Limiter exists in cache
-	key := testIpAddress
+	key := com.TestIpAddress
 	limiter := rate.NewLimiter(rate.Limit(10), 100)
 	rl.cache.Set(key, &RateLimiter{config: conf, limiter: limiter})
 
@@ -25,7 +26,7 @@ func TestIpRateLimiter_GetLimiter(t *testing.T) {
 	assert.Equal(t, limiter, result)
 
 	// Test case 2: Limiter does not exist in cache
-	key = testIpAddress2
+	key = com.TestIpAddress2
 	result = rl.GetLimiter(key)
 	assert.Nil(t, result)
 }
@@ -37,7 +38,7 @@ func TestIpRateLimiter_SetRate(t *testing.T) {
 	defer rl.Stop()
 
 	// Set up test data
-	key1 := testIpAddress
+	key1 := com.TestIpAddress
 	limiter := rate.NewLimiter(rate.Limit(10), 100)
 	rl.cache.Set(key1, &RateLimiter{config: conf, limiter: limiter})
 
@@ -57,7 +58,7 @@ func TestIpRateLimiter_SetBurst(t *testing.T) {
 	defer rl.Stop()
 
 	// Set up test data
-	key1 := testIpAddress
+	key1 := com.TestIpAddress
 	limiter := rate.NewLimiter(rate.Limit(10), 100)
 	rl.cache.Set(key1, &RateLimiter{config: conf, limiter: limiter})
 
@@ -79,7 +80,7 @@ func TestIpRateLimiter_RateAndBurst(t *testing.T) {
 	// Create a test context
 	router := gin.New()
 	router.Use(limiter.HandlerFunc())
-	router.GET(testUrlPath, func(c *gin.Context) {
+	router.GET(com.TestUrlPath, func(c *gin.Context) {
 		c.String(http.StatusOK, "OK")
 	})
 
@@ -87,14 +88,14 @@ func TestIpRateLimiter_RateAndBurst(t *testing.T) {
 	// Send multiple requests to test the rate limiter
 	for i := 0; i < 10; i++ {
 		// Start a new test the rate limiter
-		testRequestFunc(t, i, router, conf, testEndpoint, testUrlPath)
+		testRequestFunc(t, i, router, conf, com.TestEndpoint, com.TestUrlPath)
 	}
 
 	// Test the rate limiter
 	// Send multiple requests to test the rate limiter
 	for i := 0; i < 10; i++ {
 		// Start a new test the rate limiter
-		testRequestFunc(t, i, router, conf, testEndpoint2, testUrlPath)
+		testRequestFunc(t, i, router, conf, com.TestEndpoint2, com.TestUrlPath)
 	}
 }
 
@@ -107,7 +108,7 @@ func TestIpRateLimiter_Callback(t *testing.T) {
 	// Create a test context
 	router := gin.New()
 	router.Use(limiter.HandlerFunc())
-	router.GET(testUrlPath, func(c *gin.Context) {
+	router.GET(com.TestUrlPath, func(c *gin.Context) {
 		c.String(http.StatusOK, "OK")
 	})
 
@@ -115,16 +116,16 @@ func TestIpRateLimiter_Callback(t *testing.T) {
 	// Send multiple requests to test the rate limiter
 	for i := 0; i < 10; i++ {
 		// Start a new test the rate limiter
-		testRequestFunc(t, i, router, conf, testEndpoint, testUrlPath)
+		testRequestFunc(t, i, router, conf, com.TestEndpoint, com.TestUrlPath)
 	}
 }
 
 func TestIpRateLimiter_MatchFunc(t *testing.T) {
-	path := testUrlPath + "2"
+	path := com.TestUrlPath + "2"
 
 	// Create a new rate limiter
 	conf := NewConfig().WithMatchFunc(func(header *http.Request) bool {
-		return header.URL.Path == testUrlPath
+		return header.URL.Path == com.TestUrlPath
 	})
 	limiter := NewIpRateLimiter(conf)
 	defer limiter.Stop()
@@ -132,7 +133,7 @@ func TestIpRateLimiter_MatchFunc(t *testing.T) {
 	// Create a test context
 	router := gin.New()
 	router.Use(limiter.HandlerFunc())
-	router.GET(testUrlPath, func(c *gin.Context) {
+	router.GET(com.TestUrlPath, func(c *gin.Context) {
 		c.String(http.StatusOK, "OK")
 	})
 	router.GET(path, func(c *gin.Context) {
@@ -143,14 +144,14 @@ func TestIpRateLimiter_MatchFunc(t *testing.T) {
 	// Send multiple requests to test the rate limiter
 	for i := 0; i < 10; i++ {
 		// Start a new test the rate limiter
-		testRequestFunc(t, i, router, conf, testEndpoint, testUrlPath)
+		testRequestFunc(t, i, router, conf, com.TestEndpoint, com.TestUrlPath)
 	}
 
 	// Test the rate limiter
 	// Send multiple requests to test the rate limiter
 	for i := 0; i < 10; i++ {
 		// Start a new test the rate limiter
-		testWhitelistRequestFunc(t, i, router, testEndpoint, path)
+		testWhitelistRequestFunc(t, i, router, com.TestEndpoint, path)
 	}
 }
 
@@ -163,7 +164,7 @@ func TestIpRateLimiter_Whitelist(t *testing.T) {
 	// Create a test context
 	router := gin.New()
 	router.Use(limiter.HandlerFunc())
-	router.GET(testUrlPath, func(c *gin.Context) {
+	router.GET(com.TestUrlPath, func(c *gin.Context) {
 		c.String(http.StatusOK, "OK")
 	})
 
@@ -171,20 +172,20 @@ func TestIpRateLimiter_Whitelist(t *testing.T) {
 	// Send multiple requests to test the rate limiter
 	for i := 0; i < 10; i++ {
 		// Start a new test the rate limiter
-		testWhitelistRequestFunc(t, i, router, defaultEndpoint, testUrlPath)
+		testWhitelistRequestFunc(t, i, router, com.DefaultEndpoint, com.TestUrlPath)
 	}
 }
 
 func TestIpRateLimiter_CustomWhitelist(t *testing.T) {
 	// Create a new rate limiter
-	conf := NewConfig().WithIpWhitelist([]string{testIpAddress})
+	conf := NewConfig().WithIpWhitelist([]string{com.TestIpAddress})
 	limiter := NewIpRateLimiter(conf)
 	defer limiter.Stop()
 
 	// Create a test context
 	router := gin.New()
 	router.Use(limiter.HandlerFunc())
-	router.GET(testUrlPath, func(c *gin.Context) {
+	router.GET(com.TestUrlPath, func(c *gin.Context) {
 		c.String(http.StatusOK, "OK")
 	})
 
@@ -192,6 +193,6 @@ func TestIpRateLimiter_CustomWhitelist(t *testing.T) {
 	// Send multiple requests to test the rate limiter
 	for i := 0; i < 10; i++ {
 		// Start a new test the rate limiter
-		testWhitelistRequestFunc(t, i, router, testEndpoint, testUrlPath)
+		testWhitelistRequestFunc(t, i, router, com.TestEndpoint, com.TestUrlPath)
 	}
 }
