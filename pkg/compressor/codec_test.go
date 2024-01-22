@@ -69,9 +69,10 @@ var (
 )
 
 func TestGZipWriter_WriteHeader(t *testing.T) {
+	// Create a new Gin router
 	router := gin.New()
-
 	router.Use(func(c *gin.Context) {
+		// Save the original writer
 		origWriter := c.Writer
 
 		// Create a new Config
@@ -82,33 +83,31 @@ func TestGZipWriter_WriteHeader(t *testing.T) {
 		defer gw.Stop()
 
 		// Set the underlying ResponseWriter
-		rec := httptest.NewRecorder()
-		err := gw.Reset(rec)
-
-		// Check if there is no error
-		assert.Nil(t, err)
-
 		c.Writer = gw
 
+		// Call the Next method
 		c.Next()
 
 		// Call the WriteHeader method
 		gw.WriteHeader(testHttpStatusCode)
 
-		// Check if the underlying ResponseWriter has the same status code
-		assert.Equal(t, testHttpStatusCode, rec.Code)
-
+		// Restore the original writer
 		c.Writer = origWriter
 	})
 
+	// Add a new route
 	router.GET("/test", func(c *gin.Context) {
 		c.String(http.StatusOK, "OK")
 	})
 
+	// Create a new recorder
 	w := httptest.NewRecorder()
 	req, _ := http.NewRequest(http.MethodGet, "/test", nil)
+
+	// Perform the request
 	router.ServeHTTP(w, req)
 
-	assert.Equal(t, http.StatusOK, w.Code)
-	assert.Equal(t, "OK", w.Body.String())
+	// Check if the status code is correct
+	assert.Equal(t, testHttpStatusCode, w.Code)
+	assert.Equal(t, "\x1f\x8b\b\x00\x00\x00\x00\x00\x00\xff\xf2\xf7\x06\x04\x00\x00\xff\xff-\xd96\xd7\x02\x00\x00\x00", w.Body.String())
 }
