@@ -65,22 +65,19 @@ import (
 )
 
 var (
-	testHttpStatusCode = 444
+	testResponseText     = "OK"
+	testGZipResponseText = "\x1f\x8b\b\x00\x00\x00\x00\x00\x00\xff\xf2\xf7\x06\x04\x00\x00\xff\xff-\xd96\xd7\x02\x00\x00\x00"
 )
 
-func TestGZipWriter_WriteHeader(t *testing.T) {
+func TestGZipWriter_Write(t *testing.T) {
 	// Create a new Gin router
 	router := gin.New()
 	router.Use(func(c *gin.Context) {
-		// Save the original writer
-		origWriter := c.Writer
-
 		// Create a new Config
-		conf := NewConfig().WithThreshold(10)
+		conf := NewConfig()
 
 		// Create a new GZipWriter
 		gw := NewGZipWriter(conf, c.Writer)
-		defer gw.Stop()
 
 		// Set the underlying ResponseWriter
 		c.Writer = gw
@@ -88,16 +85,13 @@ func TestGZipWriter_WriteHeader(t *testing.T) {
 		// Call the Next method
 		c.Next()
 
-		// Call the WriteHeader method
-		gw.WriteHeader(testHttpStatusCode)
-
-		// Restore the original writer
-		c.Writer = origWriter
+		// Stop the GZipWriter
+		gw.Stop()
 	})
 
 	// Add a new route
 	router.GET("/test", func(c *gin.Context) {
-		c.String(http.StatusOK, "OK")
+		c.String(http.StatusOK, testResponseText)
 	})
 
 	// Create a new recorder
@@ -108,6 +102,50 @@ func TestGZipWriter_WriteHeader(t *testing.T) {
 	router.ServeHTTP(w, req)
 
 	// Check if the status code is correct
-	assert.Equal(t, testHttpStatusCode, w.Code)
-	assert.Equal(t, "\x1f\x8b\b\x00\x00\x00\x00\x00\x00\xff\xf2\xf7\x06\x04\x00\x00\xff\xff-\xd96\xd7\x02\x00\x00\x00", w.Body.String())
+	assert.Equal(t, http.StatusOK, w.Code)
+	assert.Equal(t, testGZipResponseText, w.Body.String())
+}
+
+func TestGZipWriter_Reset(t *testing.T) {
+	// Create a new Gin router
+	router := gin.New()
+	router.Use(func(c *gin.Context) {
+		// Create a new Config
+		conf := NewConfig()
+
+		// Create a new GZipWriter
+		testCtx := gin.CreateTestContextOnly(httptest.NewRecorder(), router)
+		gw := NewGZipWriter(conf, testCtx.Writer)
+
+		// Reset the GZipWriter with the underlying ResponseWriter
+		err := gw.Reset(c.Writer)
+
+		// Check if there is no error
+		assert.Nil(t, err)
+
+		// Set the underlying ResponseWriter
+		c.Writer = gw
+
+		// Call the Next method
+		c.Next()
+
+		// Stop the GZipWriter
+		gw.Stop()
+	})
+
+	// Add a new route
+	router.GET("/test", func(c *gin.Context) {
+		c.String(http.StatusOK, testResponseText)
+	})
+
+	// Create a new recorder
+	w := httptest.NewRecorder()
+	req, _ := http.NewRequest(http.MethodGet, "/test", nil)
+
+	// Perform the request
+	router.ServeHTTP(w, req)
+
+	// Check if the status code is correct
+	assert.Equal(t, http.StatusOK, w.Code)
+	assert.Equal(t, testGZipResponseText, w.Body.String())
 }
