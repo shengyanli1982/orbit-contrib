@@ -13,7 +13,8 @@ var (
 	TestPort = 13143
 	// 测试URL路径
 	// Test URL path
-	TestUrlPath = "/test"
+	TestUrlPath  = "/test"
+	TestUrlPath2 = "/test2"
 	// 测试端点
 	// Test endpoint
 	TestEndpoint    = fmt.Sprintf("%s:%d", TestIpAddress, TestPort)

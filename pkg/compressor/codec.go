@@ -3,7 +3,6 @@ package compressor
 import (
 	"compress/gzip"
 	"io"
-	"sync"
 
 	"github.com/gin-gonic/gin"
 	covt "github.com/shengyanli1982/orbit-contrib/internal/convertor"
@@ -14,7 +13,6 @@ import (
 type GZipWriter struct {
 	gin.ResponseWriter
 	writer *gzip.Writer
-	once   sync.Once
 }
 
 // NewGZipWriter 创建一个新的 GZipWriter 实例
@@ -24,7 +22,6 @@ func NewGZipWriter(config *Config, rw gin.ResponseWriter) *GZipWriter {
 	writer := GZipWriter{
 		ResponseWriter: rw,
 		writer:         gzipWriter,
-		once:           sync.Once{},
 	}
 	return &writer
 }
@@ -55,7 +52,5 @@ func (gw *GZipWriter) Reset(w io.Writer) error {
 // Stop 停止 GZipWriter
 // Stop stops GZipWriter
 func (gw *GZipWriter) Stop() {
-	gw.once.Do(func() {
-		gw.writer.Close()
-	})
+	gw.writer.Close()
 }

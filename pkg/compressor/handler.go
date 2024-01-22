@@ -44,10 +44,8 @@ func (c *Compressor) GetHandlerFunc() gin.HandlerFunc {
 			// 如果客户端 IP 不在白名单中，且限流器不允许该请求通过，则返回 429 状态码
 			// If client IP is not in the whitelist and the rate limiter does not allow the request to pass, return 429 status code
 			if _, ok := c.config.ipWhitelist[clientIP]; !ok {
-
-				ctxOrigWriter := context.Writer
 				writer := c.pool.Get().(CodecWriter)
-				if err := writer.Reset(ctxOrigWriter); err != nil {
+				if err := writer.Reset(context.Writer); err != nil {
 					context.Abort()
 					context.String(http.StatusInternalServerError, "[500] internal server error: compress error: "+err.Error()+", method: "+context.Request.Method+", path: "+context.Request.URL.Path)
 					return
@@ -57,6 +55,7 @@ func (c *Compressor) GetHandlerFunc() gin.HandlerFunc {
 				context.Next()
 
 				if !canCompressByContentLength(context.Request.Response, c.config.threshold) {
+					c.pool.Put(writer)
 					return
 				}
 
@@ -65,8 +64,6 @@ func (c *Compressor) GetHandlerFunc() gin.HandlerFunc {
 				context.Header("Content-Length", strconv.Itoa(context.Writer.Size()))
 
 				c.pool.Put(writer)
-
-				context.Writer = ctxOrigWriter
 			}
 		}
 	}
