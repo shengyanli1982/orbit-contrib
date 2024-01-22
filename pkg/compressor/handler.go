@@ -2,12 +2,15 @@ package compressor
 
 import (
 	"net/http"
+	"net/http/httptest"
 	"strconv"
 	"strings"
 	"sync"
 
 	"github.com/gin-gonic/gin"
 )
+
+var emptyContextWriter = gin.CreateTestContextOnly(httptest.NewRecorder(), gin.New()).Writer
 
 type Compressor struct {
 	config *Config
@@ -20,7 +23,7 @@ func NewCompressor(config *Config) *Compressor {
 		config: config,
 		pool: sync.Pool{
 			New: func() interface{} {
-				return config.createFunc(config)
+				return config.createFunc(config, emptyContextWriter)
 			},
 		},
 	}
@@ -50,19 +53,17 @@ func (c *Compressor) GetHandlerFunc() gin.HandlerFunc {
 					context.String(http.StatusInternalServerError, "[500] internal server error: compress error: "+err.Error()+", method: "+context.Request.Method+", path: "+context.Request.URL.Path)
 					return
 				}
+				ctxWriter := context.Writer
 				context.Writer = writer
-
-				context.Next()
-
-				if !canCompressByContentLength(context.Request.Response, c.config.threshold) {
-					c.pool.Put(writer)
-					return
-				}
 
 				context.Header("Content-Encoding", "gzip")
 				context.Header("Vary", "Accept-Encoding")
+
+				context.Next()
+
 				context.Header("Content-Length", strconv.Itoa(context.Writer.Size()))
 
+				context.Writer = ctxWriter
 				c.pool.Put(writer)
 			}
 		}
@@ -79,8 +80,4 @@ func canCompressByHeader(req *http.Request) bool {
 		return false
 	}
 	return true
-}
-
-func canCompressByContentLength(resp *http.Response, threshold int) bool {
-	return resp.ContentLength > 0 && resp.ContentLength < int64(threshold)
 }

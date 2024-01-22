@@ -4,10 +4,6 @@ import (
 	com "github.com/shengyanli1982/orbit-contrib/internal/common"
 )
 
-// empty 是一个空结构体，用于实现空的值
-// empty is an empty struct for implementing empty value
-var empty = struct{}{}
-
 var (
 	// 默认每秒限制速率
 	// Default limit rate per second
@@ -90,7 +86,7 @@ func (c *Config) WithMatchFunc(match com.HttpRequestHeaderMatchFunc) *Config {
 // WithIpWhitelist sets the whitelist
 func (c *Config) WithIpWhitelist(whitelist []string) *Config {
 	for _, ip := range whitelist {
-		c.ipWhitelist[ip] = empty
+		c.ipWhitelist[ip] = com.Empty
 	}
 	return c
 }

@@ -1,6 +1,7 @@
 package compressor
 
 import (
+	"github.com/gin-gonic/gin"
 	com "github.com/shengyanli1982/orbit-contrib/internal/common"
 )
 
@@ -12,25 +13,24 @@ const (
 	DefaultSpeed           = 3 // 3 is the fast speed compression level
 	DefaultBestSpeed       = 1 // 1 is the best speed compression level
 	DefaultNoCompression   = 0 // 0 is no compression
-
-	// 默认压缩阈值, 如果内容长度小于1KB, 不压缩
-	// 1KB, if content length is less than 1KB, do not compress
-	DefaultThreshold = 1024
 )
 
 // WriterCreateFunc 是一个创建压缩写入器的函数
 // WriterCreateFunc is a function to create a compression writer
-type WriterCreateFunc func(config *Config) any
+type WriterCreateFunc func(config *Config, rw gin.ResponseWriter) any
 
 // DefaultWriterCreateFunc 是一个默认的创建压缩写入器的函数
 // DefaultWriterCreateFunc is a default function to create a compression writer
-var DefaultWriterCreateFunc = func(config *Config) any { return nil }
+var DefaultWriterCreateFunc = func(config *Config, rw gin.ResponseWriter) any {
+	// 默认使用 GZipWriter
+	// Default to use GZipWriter
+	return NewGZipWriter(config, rw)
+}
 
 // Config 是一个配置结构体
 // Config is a struct of config
 type Config struct {
 	level       int
-	threshold   int
 	ipWhitelist map[string]struct{}
 	// 匹配函数
 	// Match function
@@ -45,7 +45,6 @@ func NewConfig() *Config {
 		level:       DefaultCompression,
 		ipWhitelist: com.DefaultIpWhitelist,
 		matchFunc:   com.DefaultLimitMatchFunc,
-		threshold:   DefaultThreshold,
 		createFunc:  DefaultWriterCreateFunc,
 	}
 }
@@ -63,6 +62,20 @@ func (c *Config) WithCompressLevel(level int) *Config {
 	return c
 }
 
+// WithWriter 设置压缩写入器
+// WithWriter sets the compression writer
+func (c *Config) WithWriterCreateFunc(fn WriterCreateFunc) *Config {
+	c.createFunc = fn
+	return c
+}
+
+// WithMatchFunc 设置匹配函数
+// WithMatchFunc sets the match function
+func (c *Config) WithMatchFunc(match com.HttpRequestHeaderMatchFunc) *Config {
+	c.matchFunc = match
+	return c
+}
+
 // WithIpWhitelist 设置白名单
 // WithIpWhitelist sets the whitelist
 func (c *Config) WithIpWhitelist(whitelist []string) *Config {
@@ -72,29 +85,12 @@ func (c *Config) WithIpWhitelist(whitelist []string) *Config {
 	return c
 }
 
-// WithThreshold 设置内容大小压缩阈值 (单位: 字节)
-// WithThreshold sets the compression threshold for content size (in bytes)
-func (c *Config) WithThreshold(threshold int) *Config {
-	c.threshold = threshold
-	return c
-}
-
-// WithWriter 设置压缩写入器
-// WithWriter sets the compression writer
-func (c *Config) WithWriterCreateFunc(fn WriterCreateFunc) *Config {
-	c.createFunc = fn
-	return c
-}
-
 // isConfigValid 检查配置是否有效
 // isConfigValid checks whether the config is valid
 func isConfigValid(config *Config) *Config {
 	if config != nil {
 		if config.level < 0 || config.level > DefaultBestCompression {
 			config.level = DefaultCompression
-		}
-		if config.threshold <= DefaultThreshold {
-			config.threshold = DefaultThreshold
 		}
 		if config.createFunc == nil {
 			config.createFunc = DefaultWriterCreateFunc

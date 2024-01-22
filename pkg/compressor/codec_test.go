@@ -20,7 +20,7 @@ func TestGZipWriter_Write(t *testing.T) {
 	router := gin.New()
 	router.Use(func(c *gin.Context) {
 		// Create a new Config
-		conf := NewConfig().WithThreshold(1)
+		conf := NewConfig()
 
 		// Create a new GZipWriter
 		gw := NewGZipWriter(conf, c.Writer)
@@ -69,7 +69,7 @@ func TestGZipWriter_Reset(t *testing.T) {
 	router := gin.New()
 	router.Use(func(c *gin.Context) {
 		// Create a new Config
-		conf := NewConfig().WithThreshold(1)
+		conf := NewConfig()
 
 		// Create a new GZipWriter
 		testCtx := gin.CreateTestContextOnly(httptest.NewRecorder(), router)
