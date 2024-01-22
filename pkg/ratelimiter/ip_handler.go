@@ -110,7 +110,7 @@ func (rl *IpRateLimiter) HandlerFunc() gin.HandlerFunc {
 			clientIP := context.ClientIP()
 			// 判断客户端IP在不在白名单中
 			// Determine whether the client IP is in the whitelist
-			if _, ok := rl.config.whitelist[clientIP]; !ok {
+			if _, ok := rl.config.ipWhitelist[clientIP]; !ok {
 				// 获取限流器，如果不存在则创建一个新的限流器
 				// Get the limiter, if it does not exist, create a new one
 				limiter, _ := rl.cache.GetOrCreate(clientIP, func() any {

@@ -34,7 +34,7 @@ go get github.com/shengyanli1982/orbit-contrib/pkg/ratelimiter
 -   `WithRate`: set the rate. The default is `float64(1)`.
 -   `WithBurst` : set the burst. The default is `1`.
 -   `WithMatchFunc` : set the match function. The default is `DefaultLimitMatchFunc`.
--   `WithWhitelist` : set the whitelist. The default is `DefaultIpWhitelist`.
+-   `WithIpWhitelist` : set the whitelist. The default is `DefaultIpWhitelist`.
 
 ### Components
 

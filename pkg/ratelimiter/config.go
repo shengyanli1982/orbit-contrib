@@ -45,7 +45,7 @@ type Config struct {
 	burst int
 	// 白名单
 	// Whitelist
-	whitelist map[string]struct{}
+	ipWhitelist map[string]struct{}
 	// 匹配函数
 	// Match function
 	match HttpRequestHeaderMatchFunc
@@ -58,11 +58,11 @@ type Config struct {
 // NewConfig creates a new config instance
 func NewConfig() *Config {
 	return &Config{
-		rate:      DefaultLimitRatePerSecond,
-		burst:     DefaultLimitBurst,
-		match:     DefaultLimitMatchFunc,
-		whitelist: DefaultIpWhitelist,
-		callback:  &emptyCallback{},
+		rate:        DefaultLimitRatePerSecond,
+		burst:       DefaultLimitBurst,
+		match:       DefaultLimitMatchFunc,
+		ipWhitelist: DefaultIpWhitelist,
+		callback:    &emptyCallback{},
 	}
 }
 
@@ -100,11 +100,11 @@ func (c *Config) WithMatchFunc(match HttpRequestHeaderMatchFunc) *Config {
 	return c
 }
 
-// WithWhitelist 设置白名单
-// WithWhitelist sets the whitelist
-func (c *Config) WithWhitelist(whitelist []string) *Config {
+// WithIpWhitelist 设置白名单
+// WithIpWhitelist sets the whitelist
+func (c *Config) WithIpWhitelist(whitelist []string) *Config {
 	for _, ip := range whitelist {
-		c.whitelist[ip] = empty
+		c.ipWhitelist[ip] = empty
 	}
 	return c
 }
@@ -122,8 +122,8 @@ func isConfigValid(config *Config) *Config {
 		if config.match == nil {
 			config.match = DefaultLimitMatchFunc
 		}
-		if config.whitelist == nil {
-			config.whitelist = DefaultIpWhitelist
+		if config.ipWhitelist == nil {
+			config.ipWhitelist = DefaultIpWhitelist
 		}
 		if config.callback == nil {
 			config.callback = &emptyCallback{}

@@ -65,7 +65,7 @@ func (rl *RateLimiter) HandlerFunc() gin.HandlerFunc {
 			clientIP := context.ClientIP()
 			// 如果客户端 IP 不在白名单中，且限流器不允许该请求通过，则返回 429 状态码
 			// If client IP is not in the whitelist and the rate limiter does not allow the request to pass, return 429 status code
-			if _, ok := rl.config.whitelist[clientIP]; !ok && !rl.limiter.Allow() {
+			if _, ok := rl.config.ipWhitelist[clientIP]; !ok && !rl.limiter.Allow() {
 				// 退出请求链
 				// Exit the request chain
 				context.Abort()

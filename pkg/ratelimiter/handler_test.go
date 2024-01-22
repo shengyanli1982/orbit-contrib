@@ -159,7 +159,7 @@ func TestLimiter_Whitelist(t *testing.T) {
 
 func TestLimiter_CustomWhitelist(t *testing.T) {
 	// Create a new rate limiter
-	conf := NewConfig().WithWhitelist([]string{testIpAddress3})
+	conf := NewConfig().WithIpWhitelist([]string{testIpAddress3})
 	limiter := NewRateLimiter(conf)
 
 	// Create a test context

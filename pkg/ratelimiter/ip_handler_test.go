@@ -177,7 +177,7 @@ func TestIpRateLimiter_Whitelist(t *testing.T) {
 
 func TestIpRateLimiter_CustomWhitelist(t *testing.T) {
 	// Create a new rate limiter
-	conf := NewConfig().WithWhitelist([]string{testIpAddress})
+	conf := NewConfig().WithIpWhitelist([]string{testIpAddress})
 	limiter := NewIpRateLimiter(conf)
 	defer limiter.Stop()
 
