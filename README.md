@@ -1,6 +1,9 @@
-# orbit-contrib
-
-Collection of middlewares created by the community
+<div>
+	<h1>orbit-contrib</h1>
+    <p>Collection of middlewares created by the community</p>
+	<img src="assets/logo.png" alt="logo" width="450px">
+    
+</div>
 
 ## Middlewares
 
