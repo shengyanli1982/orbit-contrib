@@ -30,11 +30,20 @@ var DefaultWriterCreateFunc = func(config *Config, rw gin.ResponseWriter) any {
 // Config 是一个配置结构体
 // Config is a struct of config
 type Config struct {
-	level       int
+	// 压缩等级
+	// Compression level
+	level int
+
+	// Ip 白名单
+	// Ip whitelist
 	ipWhitelist map[string]struct{}
+
 	// 匹配函数
 	// Match function
-	matchFunc  com.HttpRequestHeaderMatchFunc
+	matchFunc com.HttpRequestHeaderMatchFunc
+
+	// 创建压缩写入器的函数
+	// Function to create a compression writer
 	createFunc WriterCreateFunc
 }
 

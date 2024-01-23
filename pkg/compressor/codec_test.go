@@ -28,12 +28,14 @@ func TestGZipWriter_Write(t *testing.T) {
 		// Set the underlying ResponseWriter
 		c.Writer = gw
 
+		// Set the Content-Encoding and Vary headers
 		c.Header("Content-Encoding", "gzip")
 		c.Header("Vary", "Accept-Encoding")
 
 		// Call the Next method
 		c.Next()
 
+		// Set the Content-Length header
 		c.Header("Content-Length", fmt.Sprint(c.Writer.Size()))
 
 		// Stop the GZipWriter
@@ -55,10 +57,12 @@ func TestGZipWriter_Write(t *testing.T) {
 	// Check if the status code is correct
 	assert.Equal(t, http.StatusOK, w.Code)
 
+	// Create gzip reader
 	gr, err := gzip.NewReader(w.Body)
 	assert.NoError(t, err)
 	defer gr.Close()
 
+	// Read the response
 	plaintext, err := io.ReadAll(gr)
 	assert.NoError(t, err)
 	assert.Equal(t, string(plaintext), testResponseText)
@@ -72,22 +76,25 @@ func TestGZipWriter_Reset(t *testing.T) {
 		conf := NewConfig()
 
 		// Create a new GZipWriter
-		testCtx := gin.CreateTestContextOnly(httptest.NewRecorder(), router)
-		gw := NewGZipWriter(conf, testCtx.Writer)
+		gw := NewGZipWriter(conf, nil)
 
 		// Reset the underlying ResponseWriter
-		err := gw.Reset(c.Writer)
+		err := gw.ResetCompressWriter(c.Writer)
+		assert.NoError(t, err)
+		err = gw.ResetResponseWriter(c.Writer)
 		assert.NoError(t, err)
 
 		// Set the underlying ResponseWriter
 		c.Writer = gw
 
+		// Set the Content-Encoding and Vary headers
 		c.Header("Content-Encoding", "gzip")
 		c.Header("Vary", "Accept-Encoding")
 
 		// Call the Next method
 		c.Next()
 
+		// Set the Content-Length header
 		c.Header("Content-Length", fmt.Sprint(c.Writer.Size()))
 
 		// Stop the GZipWriter
@@ -108,11 +115,15 @@ func TestGZipWriter_Reset(t *testing.T) {
 
 	// Check if the status code is correct
 	assert.Equal(t, http.StatusOK, w.Code)
+	assert.Equal(t, w.Header().Get("Content-Encoding"), "gzip")
+	assert.Equal(t, w.Header().Get("Vary"), "Accept-Encoding")
 
+	// Create gzip reader
 	gr, err := gzip.NewReader(w.Body)
 	assert.NoError(t, err)
 	defer gr.Close()
 
+	// Read the response
 	plaintext, err := io.ReadAll(gr)
 	assert.NoError(t, err)
 	assert.Equal(t, string(plaintext), testResponseText)

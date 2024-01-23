@@ -9,6 +9,9 @@ import (
 type CodecWriter interface {
 	gin.ResponseWriter
 	Write(msg []byte) (int, error)
-	Reset(w io.Writer) error
+	WriteString(msg string) (int, error)
+	WriteHeader(code int)
+	ResetCompressWriter(w io.Writer) error
+	ResetResponseWriter(rw gin.ResponseWriter) error
 	Stop()
 }
