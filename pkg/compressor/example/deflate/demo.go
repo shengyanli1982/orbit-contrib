@@ -29,7 +29,7 @@ func testRequestFunc(idx int, router *gin.Engine, conf *cr.Config, url string) {
 	// Get the response body
 	bodyContent := resp.Body.String()
 
-	// Create gzip reader
+	// Create deflate reader
 	gr := flate.NewReader(resp.Body)
 	defer gr.Close()
 
