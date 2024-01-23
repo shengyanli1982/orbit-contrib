@@ -31,7 +31,7 @@ go get github.com/shengyanli1982/orbit-contrib/pkg/ratelimiter
 `Ratelimiter` has a config object, which can be used to configure the batch process behavior. The config object can be used following methods to set.
 
 -   `WithCallback` : set the callback function. The default is `&emptyCallback{}`.
--   `WithRate`: set the rate. The default is `float64(1)`.
+-   `WithRate` : set the rate. The default is `float64(1)`.
 -   `WithBurst` : set the burst. The default is `1`.
 -   `WithMatchFunc` : set the match function. The default is `DefaultLimitMatchFunc`.
 -   `WithIpWhitelist` : set the whitelist. The default is `DefaultIpWhitelist`.

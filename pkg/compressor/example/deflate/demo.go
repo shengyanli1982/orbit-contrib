@@ -1,7 +1,7 @@
 package main
 
 import (
-	"compress/gzip"
+	"compress/flate"
 	"fmt"
 	"io"
 	"net/http"
@@ -16,6 +16,10 @@ var (
 	testUrl = "/test"
 )
 
+func testNewDeflateWriterFunc(config *cr.Config, rw gin.ResponseWriter) any {
+	return cr.NewDeflateWriter(config, rw)
+}
+
 func testRequestFunc(idx int, router *gin.Engine, conf *cr.Config, url string) {
 	// Create a test request
 	req := httptest.NewRequest(http.MethodGet, url, nil)
@@ -26,7 +30,7 @@ func testRequestFunc(idx int, router *gin.Engine, conf *cr.Config, url string) {
 	bodyContent := resp.Body.String()
 
 	// Create gzip reader
-	gr, _ := gzip.NewReader(resp.Body)
+	gr := flate.NewReader(resp.Body)
 	defer gr.Close()
 
 	// Read the response
@@ -38,7 +42,7 @@ func testRequestFunc(idx int, router *gin.Engine, conf *cr.Config, url string) {
 
 func main() {
 	// Create a new rate limiter
-	conf := cr.NewConfig()
+	conf := cr.NewConfig().WithWriterCreateFunc(testNewDeflateWriterFunc)
 	compr := cr.NewCompressor(conf)
 	defer compr.Stop()
 

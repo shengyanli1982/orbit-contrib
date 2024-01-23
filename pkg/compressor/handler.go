@@ -80,7 +80,7 @@ func (c *Compressor) HandlerFunc() gin.HandlerFunc {
 
 				// 设置响应头
 				// Set the response header
-				ctx.Header("Content-Encoding", "gzip")
+				ctx.Header("Content-Encoding", writer.ContentEncoding())
 				ctx.Header("Vary", "Accept-Encoding")
 
 				// 调用下一个中间件
