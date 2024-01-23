@@ -126,7 +126,7 @@ func TestLimiter_MatchFunc(t *testing.T) {
 	}
 }
 
-func TestLimiter_Whitelist(t *testing.T) {
+func TestLimiter_IpWhitelist(t *testing.T) {
 	// Create a new rate limiter
 	conf := NewConfig()
 	limiter := NewRateLimiter(conf)
@@ -146,7 +146,7 @@ func TestLimiter_Whitelist(t *testing.T) {
 	}
 }
 
-func TestLimiter_CustomWhitelist(t *testing.T) {
+func TestLimiter_CustomIpWhitelist(t *testing.T) {
 	// Create a new rate limiter
 	conf := NewConfig().WithIpWhitelist([]string{com.TestIpAddress3})
 	limiter := NewRateLimiter(conf)

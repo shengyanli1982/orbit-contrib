@@ -91,6 +91,10 @@ func (c *Compressor) HandlerFunc() gin.HandlerFunc {
 				// Set the response header
 				ctx.Header("Content-Length", strconv.Itoa(ctx.Writer.Size()))
 
+				// 停止压缩器，刷新数据到底层
+				// Stop the compressor and flush the data to the underlying
+				writer.Stop()
+
 				// 恢复原有响应写入器
 				// Restore the original response writer
 				ctx.Writer = ctxWriter

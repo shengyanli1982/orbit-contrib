@@ -56,6 +56,8 @@ func TestGZipWriter_Write(t *testing.T) {
 
 	// Check if the status code is correct
 	assert.Equal(t, http.StatusOK, w.Code)
+	assert.Equal(t, w.Header().Get("Content-Encoding"), "gzip")
+	assert.Equal(t, w.Header().Get("Vary"), "Accept-Encoding")
 
 	// Create gzip reader
 	gr, err := gzip.NewReader(w.Body)
