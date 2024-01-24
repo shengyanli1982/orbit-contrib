@@ -101,13 +101,13 @@ func (rl *IpRateLimiter) SetBurst(burst int) {
 // HandlerFunc 返回一个gin中间件函数，用于处理请求
 // HandlerFunc returns a gin middleware function for processing requests
 func (rl *IpRateLimiter) HandlerFunc() gin.HandlerFunc {
-	return func(context *gin.Context) {
+	return func(ctx *gin.Context) {
 		// 如果请求匹配限流器的配置，则进行限流
 		// If the request matches the configuration of the limiter, then limit it
-		if rl.config.matchFunc(context.Request) {
+		if rl.config.matchFunc(ctx.Request) {
 			// 获取客户端IP
 			// Get the client IP
-			clientIP := context.ClientIP()
+			clientIP := ctx.ClientIP()
 			// 判断客户端IP在不在白名单中
 			// Determine whether the client IP is in the whitelist
 			if _, ok := rl.config.ipWhitelist[clientIP]; !ok {
@@ -127,18 +127,18 @@ func (rl *IpRateLimiter) HandlerFunc() gin.HandlerFunc {
 				if !limiter.(*itl.Element).GetValue().(*RateLimiter).GetLimiter().Allow() {
 					// 退出请求链
 					// Exit the request chain
-					context.Abort()
-					context.String(http.StatusTooManyRequests, "[429] too many http requests, ip:"+clientIP+", method: "+context.Request.Method+", path: "+context.Request.URL.Path)
+					ctx.Abort()
+					ctx.String(http.StatusTooManyRequests, "[429] too many http requests, ip:"+clientIP+", method: "+ctx.Request.Method+", path: "+ctx.Request.URL.Path)
 					// 触发限流回调函数
 					// Trigger the rate limit callback function
-					rl.config.callback.OnLimited(context.Request)
+					rl.config.callback.OnLimited(ctx.Request)
 					return
 				}
 			}
 		}
 		// 继续请求链
 		// Continue the request chain
-		context.Next()
+		ctx.Next()
 	}
 }
 

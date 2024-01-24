@@ -56,29 +56,29 @@ func (rl *RateLimiter) SetBurst(burst int) {
 // HandlerFunc 返回一个 gin.HandlerFunc，用于处理请求
 // HandlerFunc returns a gin.HandlerFunc for processing requests
 func (rl *RateLimiter) HandlerFunc() gin.HandlerFunc {
-	return func(context *gin.Context) {
+	return func(ctx *gin.Context) {
 		// 如果请求匹配限流器的配置，则进行限流
 		// If the request matches the configuration of the rate limiter, rate limiting is performed
-		if rl.config.matchFunc(context.Request) {
+		if rl.config.matchFunc(ctx.Request) {
 			// 获取客户端 IP
 			// Get the client IP
-			clientIP := context.ClientIP()
+			clientIP := ctx.ClientIP()
 			// 如果客户端 IP 不在白名单中，且限流器不允许该请求通过，则返回 429 状态码
 			// If client IP is not in the whitelist and the rate limiter does not allow the request to pass, return 429 status code
 			if _, ok := rl.config.ipWhitelist[clientIP]; !ok && !rl.limiter.Allow() {
 				// 退出请求链
 				// Exit the request chain
-				context.Abort()
-				context.String(http.StatusTooManyRequests, "[429] too many http requests, method: "+context.Request.Method+", path: "+context.Request.URL.Path)
+				ctx.Abort()
+				ctx.String(http.StatusTooManyRequests, "[429] too many http requests, method: "+ctx.Request.Method+", path: "+ctx.Request.URL.Path)
 				// 调用回调函数
 				// Call the callback function
-				rl.config.callback.OnLimited(context.Request)
+				rl.config.callback.OnLimited(ctx.Request)
 				return
 			}
 		}
 		// 继续请求链
 		// Continue the request chain
-		context.Next()
+		ctx.Next()
 	}
 }
 

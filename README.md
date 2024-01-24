@@ -11,7 +11,7 @@ Following middlewares can be used with [`orbit`](https://github.com/shengyanli19
 
 All middlewares in [pkg](./pkg/) directory.
 
-### 1. Rate Limiter
+### 1. RateLimiter
 
 [**Ratelimiter**](./pkg/ratelimiter/) is used to limit the rate of requests. Based on [token bucket](https://en.wikipedia.org/wiki/Token_bucket) algorithm.
 
