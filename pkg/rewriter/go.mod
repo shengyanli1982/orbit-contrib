@@ -1,4 +1,4 @@
-module github.com/shengyanli1982/orbit-contrib/pkg/overwriter
+module github.com/shengyanli1982/orbit-contrib/pkg/rewriter
 
 go 1.19
 

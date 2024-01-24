@@ -1,18 +1,18 @@
-package overwriter
+package rewriter
 
 import (
-	"net/http"
+	"net/url"
 
 	com "github.com/shengyanli1982/orbit-contrib/internal/common"
 )
 
 // PathRewriteFunc 是一个路径重写函数
 // PathRewriteFunc is a function to rewrite the path
-type PathRewriteFunc func(header *http.Request) (bool, string)
+type PathRewriteFunc func(header *url.URL) (bool, string)
 
 // DefaultPathRewriteFunc 是一个默认的路径重写函数
 // DefaultPathRewriteFunc is a default function to rewrite the path
-var DefaultPathRewriteFunc = func(header *http.Request) (bool, string) {
+var DefaultPathRewriteFunc = func(header *url.URL) (bool, string) {
 	return false, ""
 }
 
@@ -62,8 +62,8 @@ func (c *Config) WithCallback(callback Callback) *Config {
 
 // WithMatchFunc 设置匹配函数
 // WithMatchFunc sets the match function
-func (c *Config) WithMatchFunc(match com.HttpRequestHeaderMatchFunc) *Config {
-	c.matchFunc = match
+func (c *Config) WithMatchFunc(fn com.HttpRequestHeaderMatchFunc) *Config {
+	c.matchFunc = fn
 	return c
 }
 
