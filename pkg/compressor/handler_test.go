@@ -13,7 +13,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestCompressorHandlerFunc_Default(t *testing.T) {
+func TestCompressorHandlerFunc_GZip(t *testing.T) {
 	// Create a new Config
 	conf := NewConfig()
 
@@ -27,7 +27,7 @@ func TestCompressorHandlerFunc_Default(t *testing.T) {
 
 	// Add a new route
 	router.GET(com.TestUrlPath, func(c *gin.Context) {
-		c.String(http.StatusOK, testResponseText)
+		c.String(http.StatusOK, com.TestResponseText)
 	})
 
 	// Create a new recorder
@@ -50,7 +50,7 @@ func TestCompressorHandlerFunc_Default(t *testing.T) {
 	// Read the response
 	plaintext, err := io.ReadAll(gr)
 	assert.NoError(t, err)
-	assert.Equal(t, string(plaintext), testResponseText)
+	assert.Equal(t, string(plaintext), com.TestResponseText)
 }
 
 func TestCompressorHandlerFunc_MatchFunc(t *testing.T) {
@@ -69,10 +69,10 @@ func TestCompressorHandlerFunc_MatchFunc(t *testing.T) {
 
 	// Add a new route
 	router.GET(com.TestUrlPath, func(c *gin.Context) {
-		c.String(http.StatusOK, testResponseText)
+		c.String(http.StatusOK, com.TestResponseText)
 	})
 	router.GET(com.TestUrlPath2, func(c *gin.Context) {
-		c.String(http.StatusOK, testResponseText)
+		c.String(http.StatusOK, com.TestResponseText)
 	})
 
 	// Create a new recorder
@@ -84,7 +84,7 @@ func TestCompressorHandlerFunc_MatchFunc(t *testing.T) {
 
 	// Check if the status code is correct
 	assert.Equal(t, http.StatusOK, w.Code)
-	assert.Equal(t, testResponseText, w.Body.String())
+	assert.Equal(t, com.TestResponseText, w.Body.String())
 
 	// Create a new recorder
 	w = httptest.NewRecorder()
@@ -106,12 +106,12 @@ func TestCompressorHandlerFunc_MatchFunc(t *testing.T) {
 	// Read the response
 	plaintext, err := io.ReadAll(gr)
 	assert.NoError(t, err)
-	assert.Equal(t, string(plaintext), testResponseText)
+	assert.Equal(t, string(plaintext), com.TestResponseText)
 }
 
-func TestCompressorHandlerFunc_IpWhitelist(t *testing.T) {
+func TestCompressorHandlerFunc_IpWhitelistWithLocal(t *testing.T) {
 	// Create a new Config
-	conf := NewConfig()
+	conf := NewConfig().WithIpWhitelist([]string{com.DefaultLocalIpAddress})
 
 	// Create a new Compressor
 	compr := NewCompressor(conf)
@@ -123,7 +123,7 @@ func TestCompressorHandlerFunc_IpWhitelist(t *testing.T) {
 
 	// Add a new route
 	router.GET(com.TestUrlPath, func(c *gin.Context) {
-		c.String(http.StatusOK, testResponseText)
+		c.String(http.StatusOK, com.TestResponseText)
 	})
 
 	// Create a new recorder
@@ -136,10 +136,10 @@ func TestCompressorHandlerFunc_IpWhitelist(t *testing.T) {
 
 	// Check if the status code is correct
 	assert.Equal(t, http.StatusOK, w.Code)
-	assert.Equal(t, testResponseText, w.Body.String())
+	assert.Equal(t, com.TestResponseText, w.Body.String())
 }
 
-func TestCompressorHandlerFunc_CustomWhitelist(t *testing.T) {
+func TestCompressorHandlerFunc_IpWhitelistWithOther(t *testing.T) {
 	// Create a new Config
 	conf := NewConfig().WithIpWhitelist([]string{com.TestIpAddress})
 
@@ -153,7 +153,7 @@ func TestCompressorHandlerFunc_CustomWhitelist(t *testing.T) {
 
 	// Add a new route
 	router.GET(com.TestUrlPath, func(c *gin.Context) {
-		c.String(http.StatusOK, testResponseText)
+		c.String(http.StatusOK, com.TestResponseText)
 	})
 
 	// Create a new recorder
@@ -166,7 +166,7 @@ func TestCompressorHandlerFunc_CustomWhitelist(t *testing.T) {
 
 	// Check if the status code is correct
 	assert.Equal(t, http.StatusOK, w.Code)
-	assert.Equal(t, testResponseText, w.Body.String())
+	assert.Equal(t, com.TestResponseText, w.Body.String())
 }
 
 func TestCompressorHandlerFunc_Deflate(t *testing.T) {
@@ -185,7 +185,7 @@ func TestCompressorHandlerFunc_Deflate(t *testing.T) {
 
 	// Add a new route
 	router.GET(com.TestUrlPath, func(c *gin.Context) {
-		c.String(http.StatusOK, testResponseText)
+		c.String(http.StatusOK, com.TestResponseText)
 	})
 
 	// Create a new recorder
@@ -207,5 +207,5 @@ func TestCompressorHandlerFunc_Deflate(t *testing.T) {
 	// Read the response
 	plaintext, err := io.ReadAll(fr)
 	assert.NoError(t, err)
-	assert.Equal(t, string(plaintext), testResponseText)
+	assert.Equal(t, string(plaintext), com.TestResponseText)
 }

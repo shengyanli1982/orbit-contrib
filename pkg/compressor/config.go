@@ -80,8 +80,8 @@ func (c *Config) WithWriterCreateFunc(fn WriterCreateFunc) *Config {
 
 // WithMatchFunc 设置匹配函数
 // WithMatchFunc sets the match function
-func (c *Config) WithMatchFunc(match com.HttpRequestHeaderMatchFunc) *Config {
-	c.matchFunc = match
+func (c *Config) WithMatchFunc(fn com.HttpRequestHeaderMatchFunc) *Config {
+	c.matchFunc = fn
 	return c
 }
 

@@ -11,10 +11,14 @@ Following middlewares can be used with [`orbit`](https://github.com/shengyanli19
 
 All middlewares in [pkg](./pkg/) directory.
 
-### 1. Rate Limiter
+### 1. RateLimiter
 
 [**Ratelimiter**](./pkg/ratelimiter/) is used to limit the rate of requests. Based on [token bucket](https://en.wikipedia.org/wiki/Token_bucket) algorithm.
 
 ### 2. Compressor
 
 [**Compressor**](./pkg/compressor/) is used to compress the response body. Supports `gzip` and `deflate` algorithms.
+
+### 3. Rewriter
+
+[**Rewriter**](./pkg/rewriter/) is used to rewrite the request path. Supports `url.URL` related element rewrite.

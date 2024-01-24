@@ -14,8 +14,6 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-var testResponseText = "This is HelloWorld!!"
-
 func testNewDeflateWriterFunc(config *Config, rw gin.ResponseWriter) any {
 	return NewDeflateWriter(config, rw)
 }
@@ -49,7 +47,7 @@ func TestGZipWriter_Write(t *testing.T) {
 
 	// Add a new route
 	router.GET(com.TestUrlPath, func(c *gin.Context) {
-		c.String(http.StatusOK, testResponseText)
+		c.String(http.StatusOK, com.TestResponseText)
 	})
 
 	// Create a new recorder
@@ -72,7 +70,7 @@ func TestGZipWriter_Write(t *testing.T) {
 	// Read the response
 	plaintext, err := io.ReadAll(gr)
 	assert.NoError(t, err)
-	assert.Equal(t, string(plaintext), testResponseText)
+	assert.Equal(t, string(plaintext), com.TestResponseText)
 }
 
 func TestGZipWriter_Reset(t *testing.T) {
@@ -110,7 +108,7 @@ func TestGZipWriter_Reset(t *testing.T) {
 
 	// Add a new route
 	router.GET(com.TestUrlPath, func(c *gin.Context) {
-		c.String(http.StatusOK, testResponseText)
+		c.String(http.StatusOK, com.TestResponseText)
 	})
 
 	// Create a new recorder
@@ -133,7 +131,7 @@ func TestGZipWriter_Reset(t *testing.T) {
 	// Read the response
 	plaintext, err := io.ReadAll(gr)
 	assert.NoError(t, err)
-	assert.Equal(t, string(plaintext), testResponseText)
+	assert.Equal(t, string(plaintext), com.TestResponseText)
 }
 
 func TestDeflateWriter_Write(t *testing.T) {
@@ -165,7 +163,7 @@ func TestDeflateWriter_Write(t *testing.T) {
 
 	// Add a new route
 	router.GET(com.TestUrlPath, func(c *gin.Context) {
-		c.String(http.StatusOK, testResponseText)
+		c.String(http.StatusOK, com.TestResponseText)
 	})
 
 	// Create a new recorder
@@ -187,7 +185,7 @@ func TestDeflateWriter_Write(t *testing.T) {
 	// Read the response
 	plaintext, err := io.ReadAll(dr)
 	assert.NoError(t, err)
-	assert.Equal(t, string(plaintext), testResponseText)
+	assert.Equal(t, string(plaintext), com.TestResponseText)
 }
 
 func TestDeflateWriter_Reset(t *testing.T) {
@@ -225,7 +223,7 @@ func TestDeflateWriter_Reset(t *testing.T) {
 
 	// Add a new route
 	router.GET(com.TestUrlPath, func(c *gin.Context) {
-		c.String(http.StatusOK, testResponseText)
+		c.String(http.StatusOK, com.TestResponseText)
 	})
 
 	// Create a new recorder
@@ -247,5 +245,5 @@ func TestDeflateWriter_Reset(t *testing.T) {
 	// Read the response
 	plaintext, err := io.ReadAll(dr)
 	assert.NoError(t, err)
-	assert.Equal(t, string(plaintext), testResponseText)
+	assert.Equal(t, string(plaintext), com.TestResponseText)
 }

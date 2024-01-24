@@ -1,39 +1,35 @@
-package ratelimiter
+package rewriter
 
 import (
+	"net/url"
+
 	com "github.com/shengyanli1982/orbit-contrib/internal/common"
 )
 
-var (
-	// 默认每秒限制速率
-	// Default limit rate per second
-	DefaultLimitRatePerSecond = float64(1)
+// PathRewriteFunc 是一个路径重写函数
+// PathRewriteFunc is a function to rewrite the path
+type PathRewriteFunc func(header *url.URL) (bool, string)
 
-	// 默认限制突发数
-	// Default limit burst
-	DefaultLimitBurst = 1
-)
-
-// HttpRequestHeaderMatchFunc 是一个匹配函数，用于匹配请求头
+// DefaultPathRewriteFunc 是一个默认的路径重写函数
+// DefaultPathRewriteFunc is a default function to rewrite the path
+var DefaultPathRewriteFunc = func(header *url.URL) (bool, string) {
+	return false, ""
+}
 
 // Config 是一个配置结构体
 // Config is a struct of config
 type Config struct {
-	// 速率
-	// Rate
-	rate float64
-
-	// 突发数
-	// Burst
-	burst int
-
-	// 白名单
-	// Whitelist
+	// Ip 白名单
+	// Ip whitelist
 	ipWhitelist map[string]struct{}
 
 	// 匹配函数
 	// Match function
 	matchFunc com.HttpRequestHeaderMatchFunc
+
+	// 路径重写函数
+	// Path rewrite function
+	rewriteFunc PathRewriteFunc
 
 	// 回调函数
 	// Callback
@@ -44,16 +40,15 @@ type Config struct {
 // NewConfig creates a new config instance
 func NewConfig() *Config {
 	return &Config{
-		rate:        DefaultLimitRatePerSecond,
-		burst:       DefaultLimitBurst,
-		matchFunc:   com.DefaultLimitMatchFunc,
 		ipWhitelist: com.DefaultIpWhitelist,
+		matchFunc:   com.DefaultLimitMatchFunc,
+		rewriteFunc: DefaultPathRewriteFunc,
 		callback:    &emptyCallback{},
 	}
 }
 
-// DefaultConfig 返回默认配置实例
-// DefaultConfig returns the default config instance
+// DefaultConfig 创建一个默认的配置实例
+// DefaultConfig creates a default config instance
 func DefaultConfig() *Config {
 	return NewConfig()
 }
@@ -62,20 +57,6 @@ func DefaultConfig() *Config {
 // WithCallback sets the callback function
 func (c *Config) WithCallback(callback Callback) *Config {
 	c.callback = callback
-	return c
-}
-
-// WithRate 设置速率
-// WithRate sets the rate
-func (c *Config) WithRate(rate float64) *Config {
-	c.rate = rate
-	return c
-}
-
-// WithBurst 设置突发数
-// WithBurst sets the burst
-func (c *Config) WithBurst(burst int) *Config {
-	c.burst = burst
 	return c
 }
 
@@ -95,15 +76,19 @@ func (c *Config) WithIpWhitelist(whitelist []string) *Config {
 	return c
 }
 
-// isConfigValid 检查配置是否有效，如果无效则返回默认配置实例
-// isConfigValid checks whether the config is valid, and returns the default config instance if it is invalid
+// WithPathRewriteFunc 设置路径重写函数
+// WithPathRewriteFunc sets the path rewrite function
+func (c *Config) WithPathRewriteFunc(fn PathRewriteFunc) *Config {
+	c.rewriteFunc = fn
+	return c
+}
+
+// isConfigValid 检查配置是否有效
+// isConfigValid checks whether the config is valid
 func isConfigValid(config *Config) *Config {
 	if config != nil {
-		if config.rate <= 0 {
-			config.rate = DefaultLimitRatePerSecond
-		}
-		if config.burst <= 0 {
-			config.burst = DefaultLimitBurst
+		if config.callback == nil {
+			config.callback = &emptyCallback{}
 		}
 		if config.matchFunc == nil {
 			config.matchFunc = com.DefaultLimitMatchFunc
@@ -111,12 +96,11 @@ func isConfigValid(config *Config) *Config {
 		if config.ipWhitelist == nil {
 			config.ipWhitelist = com.DefaultIpWhitelist
 		}
-		if config.callback == nil {
-			config.callback = &emptyCallback{}
+		if config.rewriteFunc == nil {
+			config.rewriteFunc = DefaultPathRewriteFunc
 		}
 	} else {
 		config = DefaultConfig()
 	}
-
 	return config
 }
