@@ -21,10 +21,7 @@ var (
 
 	// 默认IP白名单
 	// Default IP whitelist
-	DefaultIpWhitelist = map[string]struct{}{
-		DefaultLocalIpAddress:   Empty,
-		DefaultLocalIpv6Address: Empty,
-	}
+	DefaultIpWhitelist = map[string]struct{}{}
 
 	// 默认匹配函数
 	// Default match function

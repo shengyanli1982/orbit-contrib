@@ -155,9 +155,9 @@ func TestIpRateLimiter_MatchFunc(t *testing.T) {
 	}
 }
 
-func TestIpRateLimiter_Whitelist(t *testing.T) {
+func TestIpRateLimiter_IpWhitelistWithLocal(t *testing.T) {
 	// Create a new rate limiter
-	conf := NewConfig()
+	conf := NewConfig().WithIpWhitelist([]string{com.DefaultLocalIpAddress})
 	limiter := NewIpRateLimiter(conf)
 	defer limiter.Stop()
 
@@ -176,7 +176,7 @@ func TestIpRateLimiter_Whitelist(t *testing.T) {
 	}
 }
 
-func TestIpRateLimiter_CustomWhitelist(t *testing.T) {
+func TestIpRateLimiter_IpWhitelistWithOther(t *testing.T) {
 	// Create a new rate limiter
 	conf := NewConfig().WithIpWhitelist([]string{com.TestIpAddress})
 	limiter := NewIpRateLimiter(conf)

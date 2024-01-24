@@ -13,7 +13,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestCompressorHandlerFunc_Default(t *testing.T) {
+func TestCompressorHandlerFunc_GZip(t *testing.T) {
 	// Create a new Config
 	conf := NewConfig()
 
@@ -109,9 +109,9 @@ func TestCompressorHandlerFunc_MatchFunc(t *testing.T) {
 	assert.Equal(t, string(plaintext), testResponseText)
 }
 
-func TestCompressorHandlerFunc_IpWhitelist(t *testing.T) {
+func TestCompressorHandlerFunc_IpWhitelistWithLocal(t *testing.T) {
 	// Create a new Config
-	conf := NewConfig()
+	conf := NewConfig().WithIpWhitelist([]string{com.DefaultLocalIpAddress})
 
 	// Create a new Compressor
 	compr := NewCompressor(conf)
@@ -139,7 +139,7 @@ func TestCompressorHandlerFunc_IpWhitelist(t *testing.T) {
 	assert.Equal(t, testResponseText, w.Body.String())
 }
 
-func TestCompressorHandlerFunc_CustomWhitelist(t *testing.T) {
+func TestCompressorHandlerFunc_IpWhitelistWithOther(t *testing.T) {
 	// Create a new Config
 	conf := NewConfig().WithIpWhitelist([]string{com.TestIpAddress})
 
