@@ -18,3 +18,7 @@ All middlewares in [pkg](./pkg/) directory.
 ### 2. Compressor
 
 [**Compressor**](./pkg/compressor/) is used to compress the response body. Supports `gzip` and `deflate` algorithms.
+
+### 3. Rewriter
+
+[**Rewriter**](./pkg/rewriter/) is used to rewrite the request path. Supports `url.URL` related element rewrite.
