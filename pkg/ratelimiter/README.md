@@ -1,6 +1,6 @@
 # Ratelimiter
 
-**Ratelimiter** is a simple rate limiter for `Gin` and `orbit`. It is based on [token bucket](https://en.wikipedia.org/wiki/Token_bucket) algorithm. It is designed to be used in a protected API endpoint.
+**Ratelimiter** is a simple rate limiter for `gin` and `orbit`. It is based on [token bucket](https://en.wikipedia.org/wiki/Token_bucket) algorithm. It is designed to be used in a protected API endpoint.
 
 `Ratelimiter` has two modes:
 
@@ -23,8 +23,6 @@ go get github.com/shengyanli1982/orbit-contrib/pkg/ratelimiter
 ```
 
 ## Quick Start
-
-`Ratelimiter` is designed to be used in a protected API endpoint. It is recommended to use it with `orbit` or `gin`.
 
 ### Config
 
