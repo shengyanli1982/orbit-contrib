@@ -32,8 +32,8 @@ func (p *PathRewriter) HandlerFunc() gin.HandlerFunc {
 			// If the IP of the request is not in the whitelist, compression is performed
 			clientIP := ctx.ClientIP()
 			if _, ok := p.config.ipWhitelist[clientIP]; !ok {
-				// 重写请求路径, 如果重写失败, 则返回 500 错误
-				// Rewrite the request path, if the rewrite fails, return a 500 error
+				// 如果请求的路径需要重写，则进行重写
+				// If the path of the request needs to be rewritten, the path is rewritten
 				if ok, newPath := p.config.rewriteFunc(ctx.Request.URL); ok {
 					// 保存旧的请求路径
 					// Save the old request path
