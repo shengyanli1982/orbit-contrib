@@ -1,6 +1,6 @@
 # Compressor
 
-**Compressor** is a simple middleware for compressing response data. It can be used in `Gin` and `orbit`. And designed to be used in improve network transmission efficiency.
+**Compressor** is a simple middleware for compressing response data. It can be used in `gin` and `orbit`. And designed to be used in improve network transmission efficiency.
 
 `Compressor` use interface `CodecWriter` to compress response data. Now it supports `gzip` and `deflate` algorithm. You can also implement your own `CodecWriter` to support other algorithm.
 
@@ -18,8 +18,6 @@ go get github.com/shengyanli1982/orbit-contrib/pkg/compressor
 ```
 
 ## Quick Start
-
-`Compressor` is designed to be used in improve network transmission efficiency. It is recommended to use it with `orbit` or `gin`.
 
 ### Config
 

@@ -25,7 +25,7 @@ func TestPathRewriter_PathRewrite(t *testing.T) {
 		return false, ""
 	})
 
-	// Create a new Compressor
+	// Create a new PathRewriter
 	compr := NewPathRewriter(conf)
 	defer compr.Stop()
 
@@ -77,7 +77,7 @@ func TestPathRewriter_MatchFunc(t *testing.T) {
 		return true, com.TestUrlPath2
 	})
 
-	// Create a new Compressor
+	// Create a new PathRewriter
 	compr := NewPathRewriter(conf)
 	defer compr.Stop()
 
@@ -121,6 +121,104 @@ func TestPathRewriter_MatchFunc(t *testing.T) {
 	assert.Equal(t, newContext, w.Body.String())
 }
 
-func TestPathRewriter_IpWhitelistWithLocal(t *testing.T) {}
+func TestPathRewriter_IpWhitelistWithLocal(t *testing.T) {
+	// Create a new Config
+	conf := NewConfig().WithPathRewriteFunc(func(u *url.URL) (bool, string) {
+		return true, com.TestUrlPath2
+	}).WithIpWhitelist([]string{com.DefaultLocalIpAddress})
 
-func TestPathRewriter_IpWhitelistWithOther(t *testing.T) {}
+	// Create a new PathRewriter
+	compr := NewPathRewriter(conf)
+	defer compr.Stop()
+
+	// Create a new Gin router
+	router := gin.New()
+	router.Use(compr.HandlerFunc())
+
+	// Add a new route
+	router.GET(com.TestUrlPath, func(c *gin.Context) {
+		c.String(http.StatusOK, com.TestResponseText)
+	})
+
+	router.GET(com.TestUrlPath2, func(c *gin.Context) {
+		c.String(http.StatusOK, newContext)
+	})
+
+	// Create a new recorder
+	w := httptest.NewRecorder()
+	req, _ := http.NewRequest(http.MethodGet, com.TestUrlPath, nil)
+
+	// Perform the request
+	router.ServeHTTP(w, req)
+
+	// Check if the status code is correct
+	assert.Equal(t, http.StatusTemporaryRedirect, w.Code)
+	assert.Equal(t, com.TestUrlPath2, req.URL.Path)
+	assert.Equal(t, testRedirectContext+com.TestResponseText, w.Body.String())
+
+	path := req.URL.Path
+
+	// Create a new recorder
+	w = httptest.NewRecorder()
+	req, _ = http.NewRequest(http.MethodGet, path, nil)
+	req.RemoteAddr = com.DefaultEndpoint
+
+	// Perform the request
+	router.ServeHTTP(w, req)
+
+	// Check if the status code is correct
+	// assert.Equal(t, http.StatusOK, w.Code)
+	assert.Equal(t, com.TestUrlPath2, req.URL.Path)
+	assert.Equal(t, newContext, w.Body.String())
+}
+
+func TestPathRewriter_IpWhitelistWithOther(t *testing.T) {
+	// Create a new Config
+	conf := NewConfig().WithPathRewriteFunc(func(u *url.URL) (bool, string) {
+		return true, com.TestUrlPath2
+	}).WithIpWhitelist([]string{com.TestIpAddress})
+
+	// Create a new PathRewriter
+	compr := NewPathRewriter(conf)
+	defer compr.Stop()
+
+	// Create a new Gin router
+	router := gin.New()
+	router.Use(compr.HandlerFunc())
+
+	// Add a new route
+	router.GET(com.TestUrlPath, func(c *gin.Context) {
+		c.String(http.StatusOK, com.TestResponseText)
+	})
+
+	router.GET(com.TestUrlPath2, func(c *gin.Context) {
+		c.String(http.StatusOK, newContext)
+	})
+
+	// Create a new recorder
+	w := httptest.NewRecorder()
+	req, _ := http.NewRequest(http.MethodGet, com.TestUrlPath, nil)
+
+	// Perform the request
+	router.ServeHTTP(w, req)
+
+	// Check if the status code is correct
+	assert.Equal(t, http.StatusTemporaryRedirect, w.Code)
+	assert.Equal(t, com.TestUrlPath2, req.URL.Path)
+	assert.Equal(t, testRedirectContext+com.TestResponseText, w.Body.String())
+
+	path := req.URL.Path
+
+	// Create a new recorder
+	w = httptest.NewRecorder()
+	req, _ = http.NewRequest(http.MethodGet, path, nil)
+	req.RemoteAddr = com.TestEndpoint
+
+	// Perform the request
+	router.ServeHTTP(w, req)
+
+	// Check if the status code is correct
+	// assert.Equal(t, http.StatusOK, w.Code)
+	assert.Equal(t, com.TestUrlPath2, req.URL.Path)
+	assert.Equal(t, newContext, w.Body.String())
+}
