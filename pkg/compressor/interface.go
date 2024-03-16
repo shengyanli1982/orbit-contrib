@@ -9,6 +9,8 @@ import (
 // CodecWriter 是一个接口，定义了压缩编码器的写入操作。
 // CodecWriter is an interface that defines the write operations of a compression encoder.
 type CodecWriter interface {
+	// 继承了 gin.ResponseWriter 接口，可以进行 HTTP 响应的写入操作
+	// Inherits the gin.ResponseWriter interface, which can perform write operations for HTTP responses
 	gin.ResponseWriter
 
 	// Write 将字节切片写入响应。返回写入的字节数和可能的错误。
@@ -23,7 +25,7 @@ type CodecWriter interface {
 	// WriteHeader sets the status code of the response
 	WriteHeader(code int)
 
-	// ResetCompressWriter 重置压缩编码器的写入器。	参数 w 是新的写入器，返回可能的错误。
+	// ResetCompressWriter 重置压缩编码器的写入器。参数 w 是新的写入器，返回可能的错误。
 	// ResetCompressWriter resets the writer of the compression encoder. The parameter w is the new writer, and the possible error is returned.
 	ResetCompressWriter(w io.Writer) error
 
