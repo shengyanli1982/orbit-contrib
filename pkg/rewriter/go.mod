@@ -6,7 +6,7 @@ replace github.com/shengyanli1982/orbit-contrib => ../../
 
 require (
 	github.com/gin-gonic/gin v1.8.2
-	github.com/shengyanli1982/orbit-contrib v0.0.0-00010101000000-000000000000
+	github.com/shengyanli1982/orbit-contrib v0.0.0
 	github.com/stretchr/testify v1.8.4
 )
 
