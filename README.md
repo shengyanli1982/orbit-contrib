@@ -7,18 +7,18 @@
 
 ## Middlewares
 
-Following middlewares can be used with [`orbit`](https://github.com/shengyanli1982/orbit) and [`gin`](https://github.com/gin-gonic/gin).
+The following middlewares can be used with [`orbit`](https://github.com/shengyanli1982/orbit) and [`gin`](https://github.com/gin-gonic/gin).
 
-All middlewares in [pkg](./pkg/) directory.
+All middlewares are located in the [pkg](./pkg/) directory.
 
 ### 1. RateLimiter
 
-[**Ratelimiter**](./pkg/ratelimiter/) is used to limit the rate of requests. Based on [token bucket](https://en.wikipedia.org/wiki/Token_bucket) algorithm.
+The [**RateLimiter**](./pkg/ratelimiter/) middleware is used to limit the rate of requests. It is based on the [token bucket](https://en.wikipedia.org/wiki/Token_bucket) algorithm.
 
 ### 2. Compressor
 
-[**Compressor**](./pkg/compressor/) is used to compress the response body. Supports `gzip` and `deflate` algorithms.
+The [**Compressor**](./pkg/compressor/) middleware is used to compress the response body. It supports `gzip` and `deflate` algorithms.
 
 ### 3. Rewriter
 
-[**Rewriter**](./pkg/rewriter/) is used to rewrite the request path. Supports `url.URL` related element rewrite.
+The [**Rewriter**](./pkg/rewriter/) middleware is used to rewrite the request path. It supports rewriting of `url.URL` related elements.
